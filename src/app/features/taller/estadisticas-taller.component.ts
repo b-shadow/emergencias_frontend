@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -279,7 +279,10 @@ export class EstadisticasTallerComponent implements OnInit, OnDestroy {
   diagnosticosChart: any = { data: {}, options: {} };
   seguimientoChart: any = { data: {}, options: {} };
 
-  constructor(private estadisticasService: EstadisticasTallerService) {}
+  constructor(
+    private estadisticasService: EstadisticasTallerService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.cargarEstadisticas();
@@ -295,28 +298,39 @@ export class EstadisticasTallerComponent implements OnInit, OnDestroy {
     this.error = null;
     this.mensajeSinDatos = null;
     this.estadisticas = null;
+    this.cdr.markForCheck();
 
     this.estadisticasService
       .obtenerMisEstadisticas(this.filtros.fechaInicio, this.filtros.fechaFin)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (respuesta) => {
+          console.log('📊 Respuesta de estadísticas:', respuesta);
+
           if (respuesta.estadisticas) {
             this.estadisticas = respuesta.estadisticas;
+            console.log('✅ Estadísticas cargadas:', this.estadisticas);
+
             // Setup charts after data loads
-            this.setupTasaCompletacionChart();
-            this.setupDiagnosticosChart();
-            this.setupSeguimientoChart();
+            setTimeout(() => {
+              this.setupTasaCompletacionChart();
+              this.setupDiagnosticosChart();
+              this.setupSeguimientoChart();
+              this.cdr.markForCheck();
+            }, 0);
           } else {
             this.mensajeSinDatos =
               respuesta.mensaje_vacio || 'No hay datos disponibles';
+            console.log('⚠️ Sin datos:', this.mensajeSinDatos);
           }
           this.cargando = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
-          console.error('Error al cargar estadísticas:', err);
+          console.error('❌ Error al cargar estadísticas:', err);
           this.error = 'Error al cargar las estadísticas. Intenta de nuevo.';
           this.cargando = false;
+          this.cdr.markForCheck();
         },
       });
   }

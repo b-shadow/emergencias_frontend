@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -198,7 +198,7 @@ export class GestionServiciosComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private apiUrl = `${environment.apiUrl}/admin/servicios`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.cargarServicios();
@@ -219,10 +219,12 @@ export class GestionServiciosComponent implements OnInit, OnDestroy {
         next: (data) => {
           this.servicios = data;
           this.cargando = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.error = 'Error al cargar servicios';
           this.cargando = false;
+          this.cdr.markForCheck();
           console.error('Error:', err);
         }
       });

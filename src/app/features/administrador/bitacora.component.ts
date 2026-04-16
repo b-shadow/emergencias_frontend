@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -316,7 +316,7 @@ export class BitacoraComponent implements OnInit, OnDestroy {
 
   readonly Math = Math;
 
-  constructor(private bitacoraService: BitacoraService) {}
+  constructor(private bitacoraService: BitacoraService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -350,10 +350,12 @@ export class BitacoraComponent implements OnInit, OnDestroy {
           this.registros = respuesta.registros;
           this.total = respuesta.total;
           this.cargando = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.error = err.error?.detail || 'Error al cargar la bitácora';
           this.cargando = false;
+          this.cdr.markForCheck();
         }
       });
   }

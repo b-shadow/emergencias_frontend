@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '@core/services/user.service';
@@ -398,7 +398,8 @@ export class UsersComponent implements OnInit, OnDestroy {
   constructor(
     private userService: UserService,
     private formBuilder: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {
     this.createUserForm = this.formBuilder.group({
       correo: ['', [Validators.required, Validators.email]],
@@ -425,6 +426,8 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   private loadUsers(): void {
     this.isLoading = true;
+    this.cdr.markForCheck();
+
     this.userService
       .listUsers()
       .pipe(takeUntil(this.destroy$))
@@ -432,10 +435,12 @@ export class UsersComponent implements OnInit, OnDestroy {
         next: (usuarios) => {
           this.usuarios = usuarios;
           this.isLoading = false;
+          this.cdr.markForCheck();
         },
         error: (error) => {
-          console.error('Error loading users:', error);
+          console.error('❌ Error loading users:', error);
           this.isLoading = false;
+          this.cdr.markForCheck();
         }
       });
   }
@@ -456,6 +461,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.isCreatingUser = true;
     this.createUserError = '';
     this.successMessage = '';
+    this.cdr.markForCheck();
 
     this.userService
       .createUser(this.createUserForm.value)
@@ -467,15 +473,18 @@ export class UsersComponent implements OnInit, OnDestroy {
           this.successMessage = `✅ Usuario ${usuario.nombre_completo} creado exitosamente`;
           this.createUserForm.reset();
           this.showCreateForm = false;
+          this.cdr.markForCheck();
 
           // Clear success message after 3 seconds
           setTimeout(() => {
             this.successMessage = '';
+            this.cdr.markForCheck();
           }, 3000);
         },
         error: (error) => {
           this.isCreatingUser = false;
           this.createUserError = error.error?.detail || 'Error al crear usuario';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -501,6 +510,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.isChangingRole = true;
     this.changeRoleError = '';
+    this.cdr.markForCheck();
 
     this.userService
       .changeUserRole(this.selectedUser.id_usuario, this.selectedNewRole)
@@ -514,15 +524,18 @@ export class UsersComponent implements OnInit, OnDestroy {
           this.isChangingRole = false;
           this.successMessage = `✅ Rol de ${usuarioActualizado.nombre_completo} actualizado a ${usuarioActualizado.rol}`;
           this.closeChangeRoleModal();
+          this.cdr.markForCheck();
 
           // Clear success message after 3 seconds
           setTimeout(() => {
             this.successMessage = '';
+            this.cdr.markForCheck();
           }, 3000);
         },
         error: (error) => {
           this.isChangingRole = false;
           this.changeRoleError = error.error?.detail || 'Error al cambiar rol';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -546,6 +559,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     this.isDeletingUser = true;
     this.deleteError = '';
+    this.cdr.markForCheck();
 
     this.userService
       .deleteUser(this.selectedUser.id_usuario)
@@ -556,15 +570,18 @@ export class UsersComponent implements OnInit, OnDestroy {
           this.isDeletingUser = false;
           this.successMessage = `✅ Usuario ${this.selectedUser!.nombre_completo} eliminado exitosamente`;
           this.closeDeleteConfirm();
+          this.cdr.markForCheck();
 
           // Clear success message after 3 seconds
           setTimeout(() => {
             this.successMessage = '';
+            this.cdr.markForCheck();
           }, 3000);
         },
         error: (error) => {
           this.isDeletingUser = false;
           this.deleteError = error.error?.detail || 'Error al eliminar usuario';
+          this.cdr.markForCheck();
         }
       });
   }

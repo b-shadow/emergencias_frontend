@@ -55,6 +55,7 @@ export class LocationViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private map: any = null;
   private marker: any = null;
+  private loadTimeout: any = null;
 
   constructor() {}
 
@@ -69,6 +70,9 @@ export class LocationViewComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.loadTimeout) {
+      clearTimeout(this.loadTimeout);
+    }
     if (this.map) {
       this.map.remove();
       this.map = null;
@@ -140,16 +144,25 @@ export class LocationViewComponent implements OnInit, AfterViewInit, OnDestroy {
         touchPitch: false
       });
 
+      // Timeout de seguridad: después de 4 segundos ocultar el spinner aunque no se dispare 'load'
+      this.loadTimeout = setTimeout(() => {
+        this.isLoadingMap = false;
+        console.warn('Map loading timeout - ocultar spinner de todas formas');
+      }, 4000);
+
       this.map.on('load', () => {
+        clearTimeout(this.loadTimeout);
         this.addMarker(lat, lng);
         this.isLoadingMap = false;
       });
 
       this.map.on('error', (error: any) => {
+        clearTimeout(this.loadTimeout);
         console.error('Map error:', error);
         this.isLoadingMap = false;
       });
     } catch (error) {
+      clearTimeout(this.loadTimeout);
       console.error('Error initializing map:', error);
       this.isLoadingMap = false;
     }

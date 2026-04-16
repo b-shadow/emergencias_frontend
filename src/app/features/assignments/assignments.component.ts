@@ -92,43 +92,6 @@ interface Asignacion {
         </button>
       </div>
 
-          <!-- Filter by State -->
-      <div class="mb-6 p-4 rounded-lg" [ngClass]="isDarkMode ? 'bg-slate-700' : 'bg-gray-100'">
-        <p class="text-sm font-semibold mb-3" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
-          Filtrar por estado de atención:
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <button (click)="filterByState('TODAS')"
-                  class="px-3 py-1 rounded-full text-sm font-medium transition-all"
-                  [ngClass]="filtroActual === 'TODAS' ?
-                    (isDarkMode ? 'bg-purple-600 text-white' : 'bg-purple-500 text-white') :
-                    (isDarkMode ? 'bg-slate-600 text-slate-300 hover:bg-slate-500' : 'bg-gray-300 text-gray-700 hover:bg-gray-400')">
-            Todas
-          </button>
-          <button (click)="filterByState('EN_CAMINO')"
-                  class="px-3 py-1 rounded-full text-sm font-medium transition-all"
-                  [ngClass]="filtroActual === 'EN_CAMINO' ?
-                    (isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white') :
-                    (isDarkMode ? 'bg-slate-600 text-slate-300 hover:bg-slate-500' : 'bg-gray-300 text-gray-700 hover:bg-gray-400')">
-            En Camino
-          </button>
-          <button (click)="filterByState('EN_PROCESO')"
-                  class="px-3 py-1 rounded-full text-sm font-medium transition-all"
-                  [ngClass]="filtroActual === 'EN_PROCESO' ?
-                    (isDarkMode ? 'bg-yellow-600 text-white' : 'bg-yellow-500 text-white') :
-                    (isDarkMode ? 'bg-slate-600 text-slate-300 hover:bg-slate-500' : 'bg-gray-300 text-gray-700 hover:bg-gray-400')">
-            En Proceso
-          </button>
-          <button (click)="filterByState('ATENDIDA')"
-                  class="px-3 py-1 rounded-full text-sm font-medium transition-all"
-                  [ngClass]="filtroActual === 'ATENDIDA' ?
-                    (isDarkMode ? 'bg-green-600 text-white' : 'bg-green-500 text-white') :
-                    (isDarkMode ? 'bg-slate-600 text-slate-300 hover:bg-slate-500' : 'bg-gray-300 text-gray-700 hover:bg-gray-400')">
-            Atendida
-          </button>
-        </div>
-      </div>
-
       <!-- Loading State -->
       <div *ngIf="isLoading" class="flex justify-center items-center py-12">
         <div class="text-center">
@@ -152,10 +115,10 @@ interface Asignacion {
            [ngClass]="isDarkMode ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-gray-50'">
         <div class="text-5xl mb-3">📋</div>
         <p class="text-lg font-semibold" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
-          No hay asignaciones
+          No hay asignaciones activas
         </p>
         <p class="text-sm mt-2" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-          {{ filtroActual === 'TODAS' ? 'Aún no te han asignado emergencias' : 'No hay asignaciones en estado: ' + formatearEstado(filtroActual) }}
+          Aún no te han asignado emergencias
         </p>
       </div>
 
@@ -500,7 +463,6 @@ interface Asignacion {
 export class AssignmentsComponent implements OnInit, OnDestroy {
   asignaciones: Asignacion[] = [];
   asignacionesFiltradas: Asignacion[] = [];
-  filtroActual: string = 'TODAS';
   isLoading = true;
   error: string | null = null;
   isDarkMode = false;
@@ -725,18 +687,15 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   }
 
   filterByState(estado: string): void {
-    this.filtroActual = estado;
-    this.aplicarFiltro();
+    // Método removido: las asignaciones se filtran automáticamente
   }
 
   aplicarFiltro(): void {
-    if (this.filtroActual === 'TODAS') {
-      this.asignacionesFiltradas = this.asignaciones;
-    } else {
-      this.asignacionesFiltradas = this.asignaciones.filter(
-        a => a.solicitud?.estado_actual === this.filtroActual
-      );
-    }
+    // Filtrar automáticamente: mostrar solo asignaciones que NO sean ATENDIDA
+    // Las ATENDIDA aparecen en "Resultado del Servicio"
+    this.asignacionesFiltradas = this.asignaciones.filter(
+      a => a.solicitud?.estado_actual !== 'ATENDIDA'
+    );
   }
 
   getProximosEstados(estadoActual: string): string[] {

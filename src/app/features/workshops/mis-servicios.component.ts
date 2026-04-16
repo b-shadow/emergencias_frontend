@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -193,7 +193,7 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private workshopService: WorkshopService) {}
+  constructor(private workshopService: WorkshopService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -208,18 +208,48 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
     this.cargando = true;
     this.error = null;
 
-    Promise.all([
-      this.workshopService.getAllServicios().toPromise(),
-      this.workshopService.getMisServicios().toPromise()
-    ])
-      .then(([todos, mios]) => {
-        this.todosServicios = todos || [];
-        this.misServicios = mios || [];
-        this.cargando = false;
-      })
-      .catch((err) => {
-        this.error = 'Error al cargar servicios';
-        this.cargando = false;
+    // Cargar ambas listas en paralelo
+    let serviciosCompletos = false;
+    let misServiciosCompletos = false;
+
+    // Cargar todos los servicios
+    this.workshopService
+      .getAllServicios()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.todosServicios = data || [];
+          serviciosCompletos = true;
+          if (misServiciosCompletos) {
+            this.cargando = false;
+            this.cdr.markForCheck();
+          }
+        },
+        error: (err) => {
+          this.error = 'Error al cargar servicios disponibles';
+          this.cargando = false;
+          this.cdr.markForCheck();
+        }
+      });
+
+    // Cargar mis servicios
+    this.workshopService
+      .getMisServicios()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.misServicios = data || [];
+          misServiciosCompletos = true;
+          if (serviciosCompletos) {
+            this.cargando = false;
+            this.cdr.markForCheck();
+          }
+        },
+        error: (err) => {
+          this.error = 'Error al cargar mis servicios';
+          this.cargando = false;
+          this.cdr.markForCheck();
+        }
       });
   }
 

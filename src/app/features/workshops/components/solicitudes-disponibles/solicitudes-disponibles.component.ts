@@ -182,16 +182,21 @@ export class SolicitudesDisponiblesComponent implements OnInit, OnDestroy {
         this.pageIndex * this.pageSize,
         this.pageSize
       )
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
-          this.solicitudes = response.solicitudes || [];
-          this.totalItems = response.total || 0;
+          // El backend retorna: { total_disponibles, cantidad_por_especialidad, solicitudes }
+          // El frontend espera: { solicitudes, total }
+          this.solicitudes = response.solicitudes || response.data?.solicitudes || [];
+          this.totalItems = response.total_disponibles || response.total || 0;
           this.isLoading = false;
+          this.cdr.markForCheck();
         },
         error: (err: any) => {
           this.error = 'Error al cargar solicitudes disponibles';
-          console.error(err);
+          console.error('Error in listarSolicitudesDisponibles:', err);
           this.isLoading = false;
+          this.cdr.markForCheck();
         },
       });
   }

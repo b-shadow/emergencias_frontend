@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { WorkshopService, TallerAdminListItem, TallerAdminDetail, TallerActionResponse } from '@core/services/workshop.service';
@@ -323,7 +323,8 @@ export class GestionarTallerComponent implements OnInit, OnDestroy {
 
   constructor(
     private workshopService: WorkshopService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.formEditarTaller = this.fb.group({
       nombre_taller: [''],
@@ -384,10 +385,12 @@ export class GestionarTallerComponent implements OnInit, OnDestroy {
         next: (data) => {
           this.talleres = data;
           this.cargando = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.error = err.error?.detail || 'Error al cargar talleres';
           this.cargando = false;
+          this.cdr.markForCheck();
         }
       });
   }
@@ -426,9 +429,11 @@ export class GestionarTallerComponent implements OnInit, OnDestroy {
             descripcion: taller.descripcion
           });
           this.mostrarModalDetalle = true;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.error = 'Error al cargar detalle del taller';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -444,10 +449,15 @@ export class GestionarTallerComponent implements OnInit, OnDestroy {
           this.mensajeExito = '✅ Cambios guardados correctamente';
           this.mostrarModalDetalle = false;
           this.cargarTalleres();
-          setTimeout(() => this.mensajeExito = null, 3000);
+          this.cdr.markForCheck();
+          setTimeout(() => {
+            this.mensajeExito = null;
+            this.cdr.markForCheck();
+          }, 3000);
         },
         error: (err) => {
           this.error = err.error?.detail || 'Error al guardar cambios';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -468,10 +478,15 @@ export class GestionarTallerComponent implements OnInit, OnDestroy {
           this.mensajeExito = '✅ Taller aprobado correctamente';
           this.mostrarModalAprobar = false;
           this.cargarTalleres();
-          setTimeout(() => this.mensajeExito = null, 3000);
+          this.cdr.markForCheck();
+          setTimeout(() => {
+            this.mensajeExito = null;
+            this.cdr.markForCheck();
+          }, 3000);
         },
         error: (err) => {
           this.error = err.error?.detail || 'Error al aprobar taller';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -493,10 +508,15 @@ export class GestionarTallerComponent implements OnInit, OnDestroy {
           this.mensajeExito = '✅ Taller rechazado correctamente';
           this.mostrarModalRechazar = false;
           this.cargarTalleres();
-          setTimeout(() => this.mensajeExito = null, 3000);
+          this.cdr.markForCheck();
+          setTimeout(() => {
+            this.mensajeExito = null;
+            this.cdr.markForCheck();
+          }, 3000);
         },
         error: (err) => {
           this.error = err.error?.detail || 'Error al rechazar taller';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -517,10 +537,15 @@ export class GestionarTallerComponent implements OnInit, OnDestroy {
           this.mensajeExito = '✅ Taller habilitado correctamente';
           this.mostrarModalHabilitar = false;
           this.cargarTalleres();
-          setTimeout(() => this.mensajeExito = null, 3000);
+          this.cdr.markForCheck();
+          setTimeout(() => {
+            this.mensajeExito = null;
+            this.cdr.markForCheck();
+          }, 3000);
         },
         error: (err) => {
           this.error = err.error?.detail || 'Error al habilitar taller';
+          this.cdr.markForCheck();
         }
       });
   }
@@ -541,10 +566,15 @@ export class GestionarTallerComponent implements OnInit, OnDestroy {
           this.mensajeExito = '✅ Taller deshabilitado correctamente';
           this.mostrarModalDeshabilitar = false;
           this.cargarTalleres();
-          setTimeout(() => this.mensajeExito = null, 3000);
+          this.cdr.markForCheck();
+          setTimeout(() => {
+            this.mensajeExito = null;
+            this.cdr.markForCheck();
+          }, 3000);
         },
         error: (err) => {
           this.error = err.error?.detail || 'Error al deshabilitar taller';
+          this.cdr.markForCheck();
         }
       });
   }

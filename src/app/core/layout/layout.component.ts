@@ -59,100 +59,189 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog.compon
         >
           <!-- Nav Content with Scroll -->
           <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <!-- Taller Section -->
+            <!-- ==== TALLER SECTION ==== -->
             <div *ngIf="isTaller()">
               <h3 class="text-xs font-semibold text-gray-600 dark:text-slate-400 uppercase tracking-wider px-3 py-2">
                 Taller
               </h3>
-              <a routerLink="/dashboard" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+
+              <!-- Dashboard -->
+              <a routerLink="/dashboard" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
                 <span class="text-lg">📊</span>
                 <span>Dashboard</span>
               </a>
 
-              <a routerLink="/emergency-requests" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">⚠️</span>
-                <span>Solicitudes Compatibles</span>
-              </a>
+              <!-- Mi Taller (Expandible) -->
+              <div class="space-y-1">
+                <button
+                  (click)="toggleMenu('miTaller')"
+                  type="button"
+                  class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+                >
+                  <span class="flex items-center gap-3">
+                    <span class="text-lg">🏢</span>
+                    <span>Mi Taller</span>
+                  </span>
+                  <span class="text-lg transition-transform" [style.transform]="expandedMenus['miTaller'] ? 'rotate(180deg)' : 'rotate(0deg)'">
+                    ▼
+                  </span>
+                </button>
+                <div *ngIf="expandedMenus['miTaller']" class="space-y-1 pl-6">
+                  <a routerLink="/workshops/profile" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">👤</span>
+                    <span>Perfil</span>
+                  </a>
+                  <a routerLink="/workshops/especialidades" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">🏷️</span>
+                    <span>Especialidades</span>
+                  </a>
+                  <a routerLink="/workshops/servicios" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">🛠️</span>
+                    <span>Servicios</span>
+                  </a>
+                </div>
+              </div>
 
-              <a routerLink="/applications" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">📮</span>
-                <span>Mis Postulaciones</span>
-              </a>
+              <!-- Emergencias (Expandible) -->
+              <div class="space-y-1">
+                <button
+                  (click)="toggleMenu('emergencias')"
+                  type="button"
+                  class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+                >
+                  <span class="flex items-center gap-3">
+                    <span class="text-lg">⚠️</span>
+                    <span>Emergencias</span>
+                  </span>
+                  <span class="text-lg transition-transform" [style.transform]="expandedMenus['emergencias'] ? 'rotate(180deg)' : 'rotate(0deg)'">
+                    ▼
+                  </span>
+                </button>
+                <div *ngIf="expandedMenus['emergencias']" class="space-y-1 pl-6">
+                  <a routerLink="/emergency-requests" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">📋</span>
+                    <span>Solicitudes Compatibles</span>
+                  </a>
+                  <a routerLink="/applications" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">📮</span>
+                    <span>Mis Postulaciones</span>
+                  </a>
+                  <a routerLink="/assignments" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">🔧</span>
+                    <span>Asignaciones Activas</span>
+                  </a>
+                  <a routerLink="/service-results" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">✅</span>
+                    <span>Resultado del Servicio</span>
+                  </a>
+                </div>
+              </div>
 
-              <a routerLink="/assignments" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">🔧</span>
-                <span>Atención Asignada</span>
-              </a>
-
-              <a routerLink="/estadisticas" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">📈</span>
-                <span>Estadísticas</span>
-              </a>
-
-              <a routerLink="/workshops" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">🏢</span>
-                <span>Mi Taller</span>
-              </a>
-
-              <a routerLink="/workshops/especialidades" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 pl-10 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">🔧</span>
-                <span>Especialidades</span>
-              </a>
-
-              <a routerLink="/workshops/servicios" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 pl-10 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">🛠️</span>
-                <span>Servicios</span>
-              </a>
+              <!-- Seguimiento (Expandible) -->
+              <div class="space-y-1">
+                <button
+                  (click)="toggleMenu('seguimiento')"
+                  type="button"
+                  class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+                >
+                  <span class="flex items-center gap-3">
+                    <span class="text-lg">📍</span>
+                    <span>Seguimiento</span>
+                  </span>
+                  <span class="text-lg transition-transform" [style.transform]="expandedMenus['seguimiento'] ? 'rotate(180deg)' : 'rotate(0deg)'">
+                    ▼
+                  </span>
+                </button>
+                <div *ngIf="expandedMenus['seguimiento']" class="space-y-1 pl-6">
+                  <a [routerLink]="notificationsRoute" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">🔔</span>
+                    <span>Notificaciones</span>
+                  </a>
+                  <a routerLink="/estadisticas" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">📈</span>
+                    <span>Estadísticas</span>
+                  </a>
+                </div>
+              </div>
             </div>
 
-            <!-- Admin Section -->
+            <!-- ==== ADMINISTRADOR SECTION ==== -->
             <div *ngIf="isAdmin()">
               <h3 class="text-xs font-semibold text-gray-600 dark:text-slate-400 uppercase tracking-wider px-3 py-2">
                 Administrador
               </h3>
 
-              <a routerLink="/dashboard" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+              <!-- Dashboard -->
+              <a routerLink="/dashboard" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
                 <span class="text-lg">📊</span>
                 <span>Dashboard</span>
               </a>
 
-              <a routerLink="/users" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">👥</span>
-                <span>Usuarios</span>
-              </a>
+              <!-- Administración (Expandible) -->
+              <div class="space-y-1">
+                <button
+                  (click)="toggleMenu('administracion')"
+                  type="button"
+                  class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+                >
+                  <span class="flex items-center gap-3">
+                    <span class="text-lg">⚙️</span>
+                    <span>Administración</span>
+                  </span>
+                  <span class="text-lg transition-transform" [style.transform]="expandedMenus['administracion'] ? 'rotate(180deg)' : 'rotate(0deg)'">
+                    ▼
+                  </span>
+                </button>
+                <div *ngIf="expandedMenus['administracion']" class="space-y-1 pl-6">
+                  <a routerLink="/users" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">👥</span>
+                    <span>Usuarios y Roles</span>
+                  </a>
+                  <a routerLink="/workshops-management" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">🏭</span>
+                    <span>Talleres</span>
+                  </a>
+                  <a routerLink="/gestionar-especialidades" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">🏷️</span>
+                    <span>Especialidades</span>
+                  </a>
+                  <a routerLink="/gestionar-servicios" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">📦</span>
+                    <span>Servicios</span>
+                  </a>
+                </div>
+              </div>
 
-              <a routerLink="/workshops" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">🏭</span>
-                <span>Talleres</span>
-              </a>
-
-              <a routerLink="/workshops-management" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">🏢</span>
-                <span>Gestionar Talleres</span>
-              </a>
-
-              <a routerLink="/gestionar-especialidades" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">🏷️</span>
-                <span>Especialidades</span>
-              </a>
-
-              <a routerLink="/gestionar-servicios" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">📦</span>
-                <span>Servicios</span>
-              </a>
-
-              <a routerLink="/bitacora" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">📋</span>
-                <span>Bitácora</span>
-              </a>
-            </div>
-
-            <!-- Common Section -->
-            <div class="border-t border-gray-200 dark:border-slate-700 pt-4">
-              <a [routerLink]="notificationsRoute" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
-                <span class="text-lg">🔔</span>
-                <span>Notificaciones</span>
-              </a>
+              <!-- Supervisión (Expandible) -->
+              <div class="space-y-1">
+                <button
+                  (click)="toggleMenu('supervision')"
+                  type="button"
+                  class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+                >
+                  <span class="flex items-center gap-3">
+                    <span class="text-lg">🔍</span>
+                    <span>Supervisión</span>
+                  </span>
+                  <span class="text-lg transition-transform" [style.transform]="expandedMenus['supervision'] ? 'rotate(180deg)' : 'rotate(0deg)'">
+                    ▼
+                  </span>
+                </button>
+                <div *ngIf="expandedMenus['supervision']" class="space-y-1 pl-6">
+                  <a [routerLink]="notificationsRoute" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">🔔</span>
+                    <span>Historial de Notificaciones</span>
+                  </a>
+                  <a routerLink="/bitacora" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">📋</span>
+                    <span>Bitácora</span>
+                  </a>
+                  <a routerLink="/estadisticas-sistema" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">📊</span>
+                    <span>Estadísticas y Reportes</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </nav>
 
@@ -197,11 +286,24 @@ export class LayoutComponent implements OnInit {
   isDarkMode = false;
   workshopName = 'Taller Mecánico';
 
+  // Submenu expansion states
+  expandedMenus: { [key: string]: boolean } = {
+    miTaller: false,
+    emergencias: false,
+    seguimiento: false,
+    administracion: false,
+    supervision: false
+  };
+
   isTaller = this.authService.isTaller.bind(this.authService);
   isAdmin = this.authService.isAdmin.bind(this.authService);
 
   get notificationsRoute(): string {
     return this.isAdmin() ? '/notifications/admin' : '/notifications';
+  }
+
+  toggleMenu(menuName: string): void {
+    this.expandedMenus[menuName] = !this.expandedMenus[menuName];
   }
 
   constructor(

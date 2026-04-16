@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -183,7 +183,7 @@ export class VerPerfilComponent implements OnInit, OnDestroy {
   error: string | null = null;
   private destroy$ = new Subject<void>();
 
-  constructor(private workshopService: WorkshopService) {}
+  constructor(private workshopService: WorkshopService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadProfile();
@@ -205,10 +205,12 @@ export class VerPerfilComponent implements OnInit, OnDestroy {
         next: (data) => {
           this.taller = data;
           this.loading = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.loading = false;
           this.error = err.error?.detail || 'Error al cargar el perfil del taller';
+          this.cdr.markForCheck();
           console.error('Error loading workshop profile:', err);
         }
       });

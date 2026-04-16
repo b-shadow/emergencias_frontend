@@ -3,7 +3,6 @@ import { LayoutComponent } from '@core/layout/layout.component';
 import { LoginComponent } from '@features/auth/login.component';
 import { RegisterTallerComponent } from '@features/auth/register-taller.component';
 import { DashboardComponent } from '@features/dashboard/dashboard.component';
-import { WorkshopListComponent } from '@features/workshops/workshop-list.component';
 import { VerPerfilComponent } from '@features/workshops/ver-perfil.component';
 import { EditarPerfilComponent } from '@features/workshops/editar-perfil.component';
 import { MisEspecialidadesComponent } from '@features/workshops/mis-especialidades.component';
@@ -24,6 +23,8 @@ import { EstadisticasTallerComponent } from '@features/taller/estadisticas-talle
 import { BitacoraComponent } from '@features/administrador/bitacora.component';
 import { GestionServiciosComponent } from '@features/administrador/gestion-servicios.component';
 import { GestionEspecialidadesComponent } from '@features/administrador/gestion-especialidades.component';
+import { AdminEstadisticasSistemaComponent } from '@features/admin/admin-estadisticas-sistema.component';
+import { ServiceResultsComponent } from '@features/service-results/service-results.component';
 import { AuthGuard } from '@core/guards/auth.guard';
 import { RoleGuard } from '@core/guards/role.guard';
 import { RolUsuario } from '@core/models/user.model';
@@ -46,7 +47,6 @@ export const routes: Routes = [
       {
         path: 'workshops',
         children: [
-          { path: '', component: WorkshopListComponent },
           {
             path: 'profile',
             component: VerPerfilComponent,
@@ -91,6 +91,12 @@ export const routes: Routes = [
       {
         path: 'assignments',
         component: AssignmentsComponent,
+        canActivate: [RoleGuard],
+        data: { roles: [RolUsuario.TALLER] }
+      },
+      {
+        path: 'service-results',
+        component: ServiceResultsComponent,
         canActivate: [RoleGuard],
         data: { roles: [RolUsuario.TALLER] }
       },
@@ -163,6 +169,12 @@ export const routes: Routes = [
       {
         path: 'gestionar-servicios',
         component: GestionServiciosComponent,
+        canActivate: [RoleGuard],
+        data: { roles: [RolUsuario.ADMINISTRADOR] }
+      },
+      {
+        path: 'estadisticas-sistema',
+        component: AdminEstadisticasSistemaComponent,
         canActivate: [RoleGuard],
         data: { roles: [RolUsuario.ADMINISTRADOR] }
       },

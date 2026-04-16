@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, interval } from 'rxjs';
@@ -356,7 +356,7 @@ export class NotificationsAdminComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private filtrosChange$ = new Subject<void>();
 
-  constructor(private notificacionService: NotificacionService) {}
+  constructor(private notificacionService: NotificacionService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.cargarNotificaciones();
@@ -382,6 +382,7 @@ export class NotificationsAdminComponent implements OnInit, OnDestroy {
         next: (response: NotificacionListResponse) => {
           this.notificaciones = response.items;
           this.total = response.total;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error en polling automático:', err);
@@ -406,10 +407,12 @@ export class NotificationsAdminComponent implements OnInit, OnDestroy {
           this.notificaciones = response.items;
           this.total = response.total;
           this.cargando = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.error = 'Error al cargar las notificaciones';
           this.cargando = false;
+          this.cdr.markForCheck();
           console.error(err);
         }
       });

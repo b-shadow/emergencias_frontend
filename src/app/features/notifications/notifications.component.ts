@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, interval } from 'rxjs';
@@ -41,17 +41,17 @@ import { Notificacion, NotificacionListResponse, NotificacionFiltros, EstadoLect
       <div *ngIf="!cargando && !error" class="space-y-4">
         <!-- Estadísticas -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-700 dark:to-purple-800 rounded-lg p-6 text-white shadow-md">
-            <p class="text-sm font-medium opacity-90">Total de Notificaciones</p>
-            <p class="text-3xl font-bold mt-2">{{ total }}</p>
+          <div class="bg-gradient-to-br from-purple-600 to-purple-700 dark:from-purple-700 dark:to-purple-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+            <p class="text-sm font-semibold opacity-100 text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow">📊 Total de Notificaciones</p>
+            <p class="text-4xl font-bold mt-2 text-slate-900 dark:text-white dark:drop-shadow">{{ total }}</p>
           </div>
-          <div class="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-700 dark:to-blue-800 rounded-lg p-6 text-white shadow-md">
-            <p class="text-sm font-medium opacity-90">No Leídas</p>
-            <p class="text-3xl font-bold mt-2">{{ contarNoLeidas() }}</p>
+          <div class="bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+            <p class="text-sm font-semibold opacity-100 text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow">📬 No Leídas</p>
+            <p class="text-4xl font-bold mt-2 text-slate-900 dark:text-white dark:drop-shadow">{{ contarNoLeidas() }}</p>
           </div>
-          <div class="bg-gradient-to-br from-green-500 to-green-600 dark:from-green-700 dark:to-green-800 rounded-lg p-6 text-white shadow-md">
-            <p class="text-sm font-medium opacity-90">Leídas</p>
-            <p class="text-3xl font-bold mt-2">{{ contarLeidas() }}</p>
+          <div class="bg-gradient-to-br from-green-600 to-green-700 dark:from-green-700 dark:to-green-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+            <p class="text-sm font-semibold opacity-100 text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow">✓ Leídas</p>
+            <p class="text-4xl font-bold mt-2 text-slate-900 dark:text-white dark:drop-shadow">{{ contarLeidas() }}</p>
           </div>
         </div>
 
@@ -225,7 +225,10 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private filtrosChange$ = new Subject<void>();
 
-  constructor(private notificacionService: NotificacionService) {}
+  constructor(
+    private notificacionService: NotificacionService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.cargarNotificaciones();
@@ -241,21 +244,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         this.cargarNotificaciones();
       });
 
-    // Polling automático cada 5 segundos
-    interval(5000)
-      .pipe(
-        switchMap(() => this.notificacionService.obtenerMisNotificaciones(this.filtros)),
-        takeUntil(this.destroy$)
-      )
-      .subscribe({
-        next: (response: NotificacionListResponse) => {
-          this.notificaciones = response.items;
-          this.total = response.total;
-        },
-        error: (err) => {
-          console.error('Error en polling automático:', err);
-        }
-      });
+    // NOTA: Polling automático deshabilitado para evitar ExpressionChangedAfterItHasBeenCheckedError
+    // Si necesitas actualizaciones automáticas, el usuario puede hacer clic en "Refrescar Ahora"
   }
 
   ngOnDestroy(): void {
@@ -266,6 +256,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   cargarNotificaciones(): void {
     this.cargando = true;
     this.error = null;
+    this.cdr.markForCheck();
 
     this.notificacionService
       .obtenerMisNotificaciones(this.filtros)
@@ -275,11 +266,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
           this.notificaciones = response.items;
           this.total = response.total;
           this.cargando = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.error = 'Error al cargar las notificaciones';
           this.cargando = false;
           console.error(err);
+          this.cdr.markForCheck();
         }
       });
   }
@@ -291,6 +284,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (notif) => {
           this.notificacionSeleccionada = notif;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error al cargar detalle:', err);
@@ -300,6 +294,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   cerrarDetalle(): void {
     this.notificacionSeleccionada = null;
+    this.cdr.markForCheck();
   }
 
   marcarComoLeida(id: string): void {

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -192,7 +192,7 @@ export class MisEspecialidadesComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private workshopService: WorkshopService) {}
+  constructor(private workshopService: WorkshopService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -207,18 +207,48 @@ export class MisEspecialidadesComponent implements OnInit, OnDestroy {
     this.cargando = true;
     this.error = null;
 
-    Promise.all([
-      this.workshopService.getAllEspecialidades().toPromise(),
-      this.workshopService.getMisEspecialidades().toPromise()
-    ])
-      .then(([todas, mias]) => {
-        this.todasEspecialidades = todas || [];
-        this.misEspecialidades = mias || [];
-        this.cargando = false;
-      })
-      .catch((err) => {
-        this.error = 'Error al cargar especialidades';
-        this.cargando = false;
+    // Cargar ambas listas en paralelo
+    let especialidadesCompletas = false;
+    let misEspecialidadesCompletas = false;
+
+    // Cargar todas las especialidades
+    this.workshopService
+      .getAllEspecialidades()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.todasEspecialidades = data || [];
+          especialidadesCompletas = true;
+          if (misEspecialidadesCompletas) {
+            this.cargando = false;
+            this.cdr.markForCheck();
+          }
+        },
+        error: (err) => {
+          this.error = 'Error al cargar especialidades disponibles';
+          this.cargando = false;
+          this.cdr.markForCheck();
+        }
+      });
+
+    // Cargar mis especialidades
+    this.workshopService
+      .getMisEspecialidades()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.misEspecialidades = data || [];
+          misEspecialidadesCompletas = true;
+          if (especialidadesCompletas) {
+            this.cargando = false;
+            this.cdr.markForCheck();
+          }
+        },
+        error: (err) => {
+          this.error = 'Error al cargar mis especialidades';
+          this.cargando = false;
+          this.cdr.markForCheck();
+        }
       });
   }
 
