@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AsignacionesService } from '../workshops/services/asignaciones.service';
+import { AsignacionesService } from '@modules/assignment-attention/services/asignaciones.service';
 import { ThemeService } from '@core/services/theme.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -871,3 +871,5 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     return categorias[categoria || ''] || categoria || 'Sin categoría';
   }
 }
+
+

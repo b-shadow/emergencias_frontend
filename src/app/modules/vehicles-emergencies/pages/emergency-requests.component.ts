@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SolicitudesDisponiblesComponent } from '@features/workshops/components/solicitudes-disponibles/solicitudes-disponibles.component';
+import { SolicitudesDisponiblesComponent } from '../components/solicitudes-disponibles/solicitudes-disponibles.component';
 
 @Component({
   selector: 'app-emergency-requests',

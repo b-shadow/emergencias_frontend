@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { PostulacionesService } from '../workshops/services/postulaciones.service';
+import { PostulacionesService } from '@modules/assignment-attention/services/postulaciones.service';
 import { ThemeService } from '@core/services/theme.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -374,3 +374,5 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     }
   }
 }
+
+

@@ -2,8 +2,8 @@ import { Component, OnInit, ChangeDetectorRef, OnDestroy, ViewChild, ElementRef,
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SolicitudesDisponiblesService } from '../../services/solicitudes-disponibles.service';
-import { PostulacionesService } from '../../services/postulaciones.service';
+import { SolicitudesDisponiblesService } from '@modules/assignment-attention/services/solicitudes-disponibles.service';
+import { PostulacionesService } from '@modules/assignment-attention/services/postulaciones.service';
 import { ThemeService } from '@core/services/theme.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -962,3 +962,5 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
     }
   }
 }
+
+
