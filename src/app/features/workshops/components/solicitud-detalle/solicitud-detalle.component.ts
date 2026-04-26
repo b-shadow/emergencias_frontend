@@ -31,6 +31,7 @@ interface Solicitud {
   vehiculo?: Vehiculo;
   estado_actual?: string;
   fecha_creacion?: string;
+  evidencias?: Evidencia[];
 }
 
 interface Vehiculo {
@@ -38,6 +39,15 @@ interface Vehiculo {
   marca: string | null;
   modelo: string | null;
   color: string | null;
+}
+
+interface Evidencia {
+  id_evidencia?: string;
+  tipo_evidencia: string;
+  url_archivo: string;
+  nombre_archivo?: string | null;
+  descripcion?: string | null;
+  fecha_subida?: string;
 }
 
 @Component({
@@ -143,6 +153,43 @@ interface Vehiculo {
           <p class="text-base leading-relaxed" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
             {{ solicitud.descripcion }}
           </p>
+        </div>
+
+        <!-- Evidence Section -->
+        <div class="rounded-lg shadow-md p-6 border"
+             [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-gray-200'">
+          <h2 class="text-lg font-bold mb-4" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
+            <span class="material-icons text-base mr-2 align-middle">image</span>
+            Evidencias Adjuntas
+          </h2>
+
+          <div *ngIf="evidenciasImagen.length > 0; else sinEvidencias" class="space-y-3">
+            <a *ngFor="let evidencia of evidenciasImagen"
+               [href]="evidencia.url_archivo"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="block rounded-lg border overflow-hidden transition-all hover:shadow-lg"
+               [ngClass]="isDarkMode ? 'border-slate-500 bg-slate-600' : 'border-gray-200 bg-gray-50'">
+              <img [src]="evidencia.url_archivo"
+                   [alt]="evidencia.nombre_archivo || 'Evidencia'"
+                   class="w-full h-56 object-cover">
+              <div class="p-3 text-sm">
+                <p class="font-semibold" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
+                  {{ evidencia.nombre_archivo || 'Imagen de evidencia' }}
+                </p>
+                <p *ngIf="evidencia.descripcion"
+                   [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-600'">
+                  {{ evidencia.descripcion }}
+                </p>
+              </div>
+            </a>
+          </div>
+
+          <ng-template #sinEvidencias>
+            <p class="text-sm" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
+              Esta solicitud no tiene imagenes adjuntas.
+            </p>
+          </ng-template>
         </div>
 
         <!-- Requirements Grid -->
@@ -407,6 +454,7 @@ interface Vehiculo {
 })
 export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewInit {
   solicitud: Solicitud | null = null;
+  evidenciasImagen: Evidencia[] = [];
   isLoading = true;
   error: string | null = null;
 
@@ -491,14 +539,20 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
             nombre: datosRaw.cliente_nombre || 'Cliente',
             email: datosRaw.cliente_email === 'N/A' ? 'No disponible' : (datosRaw.cliente_email || 'No disponible'),
             telefono: datosRaw.cliente_telefono === 'N/A' ? 'No disponible' : (datosRaw.cliente_telefono || 'No disponible')
-          },          vehiculo: {
+          },
+          vehiculo: {
             placa: datosRaw.vehiculo_placa || null,
             marca: datosRaw.vehiculo_marca || null,
             modelo: datosRaw.vehiculo_modelo || null,
             color: datosRaw.vehiculo_color || null
-          },          estado_actual: datosRaw.estado_actual || 'REGISTRADA',
-          fecha_creacion: datosRaw.fecha_creacion || new Date()
+          },
+          estado_actual: datosRaw.estado_actual || 'REGISTRADA',
+          fecha_creacion: datosRaw.fecha_creacion || new Date(),
+          evidencias: Array.isArray(datosRaw.evidencias) ? datosRaw.evidencias : [],
         };
+        this.evidenciasImagen = (this.solicitud.evidencias || []).filter(
+          (e: Evidencia) => (e.tipo_evidencia || '').toUpperCase() === 'IMAGEN' && !!e.url_archivo
+        );
         this.isLoading = false;
         this.cdr.markForCheck();
         // Inicializar mapa después de que los datos se hayan asignado
