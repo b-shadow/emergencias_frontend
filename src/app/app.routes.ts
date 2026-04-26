@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { LayoutComponent } from '@core/layout/layout.component';
 import { LoginComponent } from '@features/auth/login.component';
 import { RegisterTallerComponent } from '@features/auth/register-taller.component';
+import { ForgotPasswordComponent } from '@features/auth/forgot-password.component';
+import { ResetPasswordComponent } from '@features/auth/reset-password.component';
 import { DashboardComponent } from '@features/dashboard/dashboard.component';
 import { VerPerfilComponent } from '@features/workshops/ver-perfil.component';
 import { EditarPerfilComponent } from '@features/workshops/editar-perfil.component';
@@ -35,9 +37,12 @@ export const routes: Routes = [
     children: [
       { path: 'login', component: LoginComponent },
       { path: 'register-taller', component: RegisterTallerComponent },
+      { path: 'forgot-password', component: ForgotPasswordComponent },
+      { path: 'reset-password', component: ResetPasswordComponent },
       { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]
   },
+  { path: 'reset-password', redirectTo: 'auth/reset-password', pathMatch: 'full' },
   {
     path: '',
     component: LayoutComponent,

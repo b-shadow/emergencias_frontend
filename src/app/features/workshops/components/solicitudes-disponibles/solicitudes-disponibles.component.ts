@@ -16,18 +16,31 @@ import { takeUntil } from 'rxjs/operators';
   ],
   template: `
     <div class="px-6 py-4">
-      <!-- Header -->
       <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <span class="material-icons text-3xl">emergency_services_pending</span>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+          <span class="material-icons text-3xl">list_alt</span>
           Solicitudes de Emergencia Disponibles
         </h1>
         <p class="text-sm mt-2 text-gray-600 dark:text-slate-400">
-          Selecciona una solicitud para analizar y postularte si deseas brindar atención
+          Selecciona una solicitud para analizar y postularte si deseas brindar atenci�n
         </p>
       </div>
 
-      <!-- Error Message -->
+      <div *ngIf="!isLoading && solicitudes.length > 0" class="mb-4 flex items-center justify-end gap-2">
+        <label for="ordenFecha" class="text-sm font-medium" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
+          Ordenar por:
+        </label>
+        <select id="ordenFecha"
+                [(ngModel)]="sortOrder"
+                class="px-3 py-2 rounded-lg border text-sm"
+                [ngClass]="isDarkMode
+                  ? 'bg-slate-700 border-slate-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-900'">
+          <option value="recent">M�s recientes</option>
+          <option value="oldest">M�s antiguos</option>
+        </select>
+      </div>
+
       <div *ngIf="error" class="p-4 rounded-lg mb-4 border flex items-center gap-3"
            [ngClass]="isDarkMode ? 'bg-red-900 border-red-700' : 'bg-red-100 border-red-400'">
         <span class="material-icons text-base" [ngClass]="isDarkMode ? 'text-red-300' : 'text-red-600'">
@@ -36,7 +49,6 @@ import { takeUntil } from 'rxjs/operators';
         <span [ngClass]="isDarkMode ? 'text-red-200' : 'text-red-800'">{{ error }}</span>
       </div>
 
-      <!-- Loading Spinner -->
       <div *ngIf="isLoading" class="flex justify-center items-center py-12">
         <div class="text-center">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
@@ -44,11 +56,10 @@ import { takeUntil } from 'rxjs/operators';
         </div>
       </div>
 
-      <!-- Empty State -->
       <div *ngIf="!isLoading && solicitudes.length === 0"
            class="p-8 text-center rounded-lg border-2 border-dashed"
            [ngClass]="isDarkMode ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-gray-50'">
-        <div class="text-5xl mb-3">📬</div>
+        <div class="text-5xl mb-3">??</div>
         <h3 class="text-lg font-semibold" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
           No hay solicitudes disponibles
         </h3>
@@ -56,20 +67,18 @@ import { takeUntil } from 'rxjs/operators';
           No existen solicitudes de emergencia compatibles con tus especialidades en este momento.
         </p>
         <p class="text-xs mt-3" [ngClass]="isDarkMode ? 'text-slate-500' : 'text-gray-500'">
-          Intenta más tarde o actualiza tus especialidades y ubicación.
+          Intenta m�s tarde o actualiza tus especialidades y ubicaci�n.
         </p>
       </div>
 
-      <!-- Solicitudes Grid -->
       <div *ngIf="!isLoading && solicitudes.length > 0" class="grid gap-4 mb-6" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
-        <div *ngFor="let solicitud of solicitudes"
+        <div *ngFor="let solicitud of sortedSolicitudes"
              class="rounded-lg shadow-md p-5 border transition-all hover:shadow-lg"
              [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-gray-200'">
 
-          <!-- Header with Code and Urgency -->
           <div class="flex items-start justify-between mb-3">
             <div>
-              <p class="text-xs font-medium mb-1" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Código</p>
+              <p class="text-xs font-medium mb-1" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">C�digo</p>
               <h3 class="font-bold text-lg" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
                 {{ solicitud.codigo_solicitud }}
               </h3>
@@ -83,24 +92,21 @@ import { takeUntil } from 'rxjs/operators';
             </span>
           </div>
 
-          <!-- Categoría -->
           <p class="text-sm font-medium mb-3" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-700'">
             {{ solicitud.categoria_incidente || 'Sin clasificar' }}
           </p>
 
-          <!-- Distance Info -->
           <div class="flex items-center justify-between mb-4 p-2 rounded text-sm"
                [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
             <span class="flex items-center gap-1" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
-              <span class="material-icons text-base">location_on</span>
-              Radio búsqueda
+              <span class="material-icons text-base">calendar_month</span>
+              Fecha creaci�n
             </span>
             <span class="font-bold" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
-              {{ solicitud.radio_busqueda_km }} km
+              {{ formatFechaHora(solicitud.fecha_creacion) }}
             </span>
           </div>
 
-          <!-- Button -->
           <button (click)="verDetalle(solicitud.id_solicitud)"
                   class="w-full px-4 py-2 rounded-lg font-medium transition-all text-white flex items-center justify-center gap-2"
                   [ngClass]="isDarkMode
@@ -112,9 +118,8 @@ import { takeUntil } from 'rxjs/operators';
         </div>
       </div>
 
-      <!-- Pagination -->
       <div *ngIf="!isLoading && solicitudes.length > 0" class="flex justify-between items-center mt-6">
-        <button (click)="pageIndex = pageIndex - 1"
+        <button (click)="changePage(-1)"
                 [disabled]="pageIndex === 0"
                 class="px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 [ngClass]="isDarkMode
@@ -124,9 +129,9 @@ import { takeUntil } from 'rxjs/operators';
           Anterior
         </button>
         <span class="text-sm" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-          Página {{ pageIndex + 1 }}
+          P�gina {{ pageIndex + 1 }}
         </span>
-        <button (click)="pageIndex = pageIndex + 1"
+        <button (click)="changePage(1)"
                 class="px-4 py-2 rounded-lg transition-all"
                 [ngClass]="isDarkMode
                   ? 'hover:bg-slate-700 text-slate-300'
@@ -143,6 +148,7 @@ export class SolicitudesDisponiblesComponent implements OnInit, OnDestroy {
   isLoading = false;
   error: string | null = null;
   isDarkMode = false;
+  sortOrder: 'recent' | 'oldest' = 'recent';
 
   pageSize = 10;
   pageIndex = 0;
@@ -158,7 +164,6 @@ export class SolicitudesDisponiblesComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Subscribe to theme changes
     this.themeService.darkMode$
       .pipe(takeUntil(this.destroy$))
       .subscribe((isDark: boolean) => {
@@ -185,8 +190,6 @@ export class SolicitudesDisponiblesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
-          // El backend retorna: { total_disponibles, cantidad_por_especialidad, solicitudes }
-          // El frontend espera: { solicitudes, total }
           this.solicitudes = response.solicitudes || response.data?.solicitudes || [];
           this.totalItems = response.total_disponibles || response.total || 0;
           this.isLoading = false;
@@ -201,7 +204,12 @@ export class SolicitudesDisponiblesComponent implements OnInit, OnDestroy {
       });
   }
 
-  onPageChange(): void {
+  changePage(delta: number): void {
+    const next = this.pageIndex + delta;
+    if (next < 0) {
+      return;
+    }
+    this.pageIndex = next;
     this.cargarSolicitudes();
   }
 
@@ -212,9 +220,39 @@ export class SolicitudesDisponiblesComponent implements OnInit, OnDestroy {
     ]);
   }
 
-  /**
-   * Devuelve el color del chip según la urgencia
-   */
+  get sortedSolicitudes(): any[] {
+    return [...this.solicitudes].sort((a, b) => {
+      const dateA = this.parseDate(a?.fecha_creacion);
+      const dateB = this.parseDate(b?.fecha_creacion);
+      return this.sortOrder === 'recent' ? dateB - dateA : dateA - dateB;
+    });
+  }
+
+  formatFechaHora(value: string | null | undefined): string {
+    const date = this.toDate(value);
+    if (!date) {
+      return 'Sin fecha';
+    }
+
+    return new Intl.DateTimeFormat('es-BO', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(date);
+  }
+
+  private parseDate(value: string | null | undefined): number {
+    const date = this.toDate(value);
+    return date ? date.getTime() : 0;
+  }
+
+  private toDate(value: string | null | undefined): Date | null {
+    if (!value) {
+      return null;
+    }
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
   getColorUrgencia(urgencia: string): string {
     switch (urgencia) {
       case 'CRITICO':
@@ -226,3 +264,4 @@ export class SolicitudesDisponiblesComponent implements OnInit, OnDestroy {
     }
   }
 }
+

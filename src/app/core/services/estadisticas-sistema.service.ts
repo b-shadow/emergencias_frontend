@@ -44,7 +44,41 @@ export interface EstadisticasGeneralesResponse {
   solicitudes_completadas: number;
   solicitudes_pendientes: number;
   solicitudes_canceladas: number;
+  reporte: ReporteFiltradoSistema | null;
   mensaje_vacio: string | null;
+}
+
+export interface FiltroReporteSistemaAplicado {
+  fecha_inicio: string;
+  fecha_fin: string;
+  agrupar_por: string;
+  nivel_urgencia?: string | null;
+  categoria_incidente?: string | null;
+  estado_solicitud?: string | null;
+  id_taller?: string | null;
+}
+
+export interface ReporteTablaSistemaItem {
+  grupo: string;
+  total_solicitudes: number;
+  solicitudes_atendidas: number;
+  solicitudes_canceladas: number;
+  servicios_completados: number;
+  tasa_completacion: number;
+}
+
+export interface ReporteGraficosSistema {
+  categorias: string[];
+  serie_total_solicitudes: number[];
+  serie_solicitudes_atendidas: number[];
+  serie_solicitudes_canceladas: number[];
+  serie_servicios_completados: number[];
+}
+
+export interface ReporteFiltradoSistema {
+  filtros_aplicados: FiltroReporteSistemaAplicado;
+  tabla: ReporteTablaSistemaItem[];
+  graficos: ReporteGraficosSistema;
 }
 
 @Injectable({
@@ -60,7 +94,12 @@ export class EstadisticasSistemaService {
    */
   obtenerEstadisticasSistema(
     fechaInicio?: string,
-    fechaFin?: string
+    fechaFin?: string,
+    agruparPor?: string,
+    nivelUrgencia?: string,
+    categoriaIncidente?: string,
+    estadoSolicitud?: string,
+    idTaller?: string
   ): Observable<EstadisticasGeneralesResponse> {
     let params = new HttpParams();
 
@@ -69,6 +108,21 @@ export class EstadisticasSistemaService {
     }
     if (fechaFin) {
       params = params.set('fecha_fin', fechaFin);
+    }
+    if (agruparPor) {
+      params = params.set('agrupar_por', agruparPor);
+    }
+    if (nivelUrgencia) {
+      params = params.set('nivel_urgencia', nivelUrgencia);
+    }
+    if (categoriaIncidente) {
+      params = params.set('categoria_incidente', categoriaIncidente);
+    }
+    if (estadoSolicitud) {
+      params = params.set('estado_solicitud', estadoSolicitud);
+    }
+    if (idTaller) {
+      params = params.set('id_taller', idTaller);
     }
 
     return this.http.get<EstadisticasGeneralesResponse>(

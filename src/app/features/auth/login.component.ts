@@ -230,7 +230,7 @@ import { takeUntil } from 'rxjs/operators';
 
                     <div [class]="isDarkMode ? 'border-white/10' : 'border-slate-200'" class="border-t pt-4">
                       <a
-                        href="#"
+                        routerLink="/auth/forgot-password"
                         class="transition"
                         [class]="isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'"
                       >

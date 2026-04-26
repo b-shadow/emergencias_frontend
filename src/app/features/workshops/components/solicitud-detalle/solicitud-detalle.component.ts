@@ -168,26 +168,17 @@ interface Evidencia {
                [href]="evidencia.url_archivo"
                target="_blank"
                rel="noopener noreferrer"
-               class="block rounded-lg border overflow-hidden transition-all hover:shadow-lg"
+               class="block rounded-lg border p-2 transition-all hover:shadow-lg"
                [ngClass]="isDarkMode ? 'border-slate-500 bg-slate-600' : 'border-gray-200 bg-gray-50'">
               <img [src]="evidencia.url_archivo"
                    [alt]="evidencia.nombre_archivo || 'Evidencia'"
-                   class="w-full h-56 object-cover">
-              <div class="p-3 text-sm">
-                <p class="font-semibold" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
-                  {{ evidencia.nombre_archivo || 'Imagen de evidencia' }}
-                </p>
-                <p *ngIf="evidencia.descripcion"
-                   [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-600'">
-                  {{ evidencia.descripcion }}
-                </p>
-              </div>
+                   class="w-full max-h-[70vh] object-contain rounded-md">
             </a>
           </div>
 
           <ng-template #sinEvidencias>
             <p class="text-sm" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-              Esta solicitud no tiene imagenes adjuntas.
+              Esta solicitud no tiene imágenes adjuntas.
             </p>
           </ng-template>
         </div>
