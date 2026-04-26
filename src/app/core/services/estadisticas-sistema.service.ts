@@ -45,6 +45,7 @@ export interface EstadisticasGeneralesResponse {
   solicitudes_pendientes: number;
   solicitudes_canceladas: number;
   reporte: ReporteFiltradoSistema | null;
+  opciones_filtros?: OpcionesFiltrosSistema | null;
   mensaje_vacio: string | null;
 }
 
@@ -79,6 +80,18 @@ export interface ReporteFiltradoSistema {
   filtros_aplicados: FiltroReporteSistemaAplicado;
   tabla: ReporteTablaSistemaItem[];
   graficos: ReporteGraficosSistema;
+}
+
+export interface OpcionTallerSistema {
+  id_taller: string;
+  nombre_taller: string;
+}
+
+export interface OpcionesFiltrosSistema {
+  urgencias: string[];
+  categorias_incidente: string[];
+  estados_solicitud: string[];
+  talleres: OpcionTallerSistema[];
 }
 
 @Injectable({

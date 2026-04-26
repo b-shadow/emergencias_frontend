@@ -68,11 +68,20 @@ export interface ReporteFiltradoTaller {
   graficos: ReporteGraficosTaller;
 }
 
+export interface OpcionesFiltrosTaller {
+  urgencias: string[];
+  categorias_incidente: string[];
+  estados_solicitud: string[];
+  estados_asignacion: string[];
+  estados_resultado: string[];
+}
+
 export interface EstadisticasTallerResponse {
   id_taller: string;
   nombre_taller: string;
   estadisticas: EstadisticaGeneralTaller | null;
   reporte: ReporteFiltradoTaller | null;
+  opciones_filtros?: OpcionesFiltrosTaller | null;
   mensaje_vacio?: string;
 }
 

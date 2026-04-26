@@ -7,6 +7,7 @@ import { NgChartsModule } from 'ng2-charts';
 import {
   EstadisticasGeneralesResponse,
   EstadisticasSistemaService,
+  OpcionesFiltrosSistema,
 } from '@core/services/estadisticas-sistema.service';
 
 @Component({
@@ -29,29 +30,18 @@ import {
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Desde</label>
-            <input
-              type="date"
-              [(ngModel)]="filtro.fecha_inicio"
-              (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            />
+            <input type="date" [(ngModel)]="filtro.fecha_inicio" (change)="aplicarFiltros()"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Hasta</label>
-            <input
-              type="date"
-              [(ngModel)]="filtro.fecha_fin"
-              (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            />
+            <input type="date" [(ngModel)]="filtro.fecha_fin" (change)="aplicarFiltros()"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Agrupar por</label>
-            <select
-              [(ngModel)]="filtro.agrupar_por"
-              (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            >
+            <select [(ngModel)]="filtro.agrupar_por" (change)="aplicarFiltros()"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
               <option value="dia">Dia</option>
               <option value="semana">Semana</option>
               <option value="mes">Mes</option>
@@ -63,63 +53,41 @@ import {
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Urgencia</label>
-            <select
-              [(ngModel)]="filtro.nivel_urgencia"
-              (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            >
+            <select [(ngModel)]="filtro.nivel_urgencia" (change)="aplicarFiltros()"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
               <option value="">Todas</option>
-              <option value="BAJO">BAJO</option>
-              <option value="MEDIO">MEDIO</option>
-              <option value="ALTO">ALTO</option>
-              <option value="CRITICO">CRITICO</option>
+              <option *ngFor="let item of opciones.urgencias" [value]="item">{{ item }}</option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Estado solicitud</label>
-            <select
-              [(ngModel)]="filtro.estado_solicitud"
-              (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            >
+            <select [(ngModel)]="filtro.estado_solicitud" (change)="aplicarFiltros()"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
               <option value="">Todos</option>
-              <option value="REGISTRADA">REGISTRADA</option>
-              <option value="EN_PROCESO">EN_PROCESO</option>
-              <option value="ATENDIDA">ATENDIDA</option>
-              <option value="CANCELADA">CANCELADA</option>
+              <option *ngFor="let item of opciones.estados_solicitud" [value]="item">{{ item }}</option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Categoria</label>
-            <input
-              type="text"
-              [(ngModel)]="filtro.categoria_incidente"
-              (input)="aplicarFiltros()"
-              placeholder="Ej: PINCHAZO_LLANTA"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            />
+            <select [(ngModel)]="filtro.categoria_incidente" (change)="aplicarFiltros()"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
+              <option value="">Todas</option>
+              <option *ngFor="let item of opciones.categorias_incidente" [value]="item">{{ item }}</option>
+            </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Id taller</label>
-            <input
-              type="text"
-              [(ngModel)]="filtro.id_taller"
-              (input)="aplicarFiltros()"
-              placeholder="UUID opcional"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-            />
+            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Taller</label>
+            <select [(ngModel)]="filtro.id_taller" (change)="aplicarFiltros()"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
+              <option value="">Todos</option>
+              <option *ngFor="let item of opciones.talleres" [value]="item.id_taller">{{ item.nombre_taller }}</option>
+            </select>
           </div>
           <div class="flex items-end gap-2">
-            <button
-              (click)="cargarEstadisticas()"
-              class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-            >
+            <button (click)="cargarEstadisticas()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
               Actualizar
             </button>
-            <button
-              (click)="limpiarFiltros()"
-              class="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg"
-            >
+            <button (click)="limpiarFiltros()" class="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg">
               Reset
             </button>
           </div>
@@ -154,7 +122,13 @@ import {
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Reporte tabular</h3>
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Reporte tabular</h3>
+            <div class="flex gap-2" *ngIf="estadisticas.reporte && estadisticas.reporte.tabla.length > 0">
+              <button (click)="exportarCsv()" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium">Exportar CSV</button>
+              <button (click)="exportarHtml()" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium">Exportar HTML</button>
+            </div>
+          </div>
 
           <div *ngIf="!estadisticas.reporte || estadisticas.reporte.tabla.length === 0" class="text-gray-500 dark:text-slate-400">
             No hay registros para los filtros aplicados.
@@ -208,6 +182,13 @@ export class AdminEstadisticasSistemaComponent implements OnInit, OnDestroy {
   estadisticas: EstadisticasGeneralesResponse | null = null;
   cargando = false;
   error: string | null = null;
+
+  opciones: OpcionesFiltrosSistema = {
+    urgencias: [],
+    categorias_incidente: [],
+    estados_solicitud: [],
+    talleres: [],
+  };
 
   reporteBarrasChart: any = { data: {}, options: {} };
   reporteCompletacionChart: any = { data: {}, options: {} };
@@ -287,6 +268,8 @@ export class AdminEstadisticasSistemaComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => {
           this.estadisticas = data;
+          this.opciones = data.opciones_filtros || this.opciones;
+          this.sincronizarFiltrosConOpciones();
           this.cargando = false;
           this.setupReporteCharts();
           this.cdr.markForCheck();
@@ -297,6 +280,116 @@ export class AdminEstadisticasSistemaComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
       });
+  }
+
+  private sincronizarFiltrosConOpciones(): void {
+    if (this.filtro.nivel_urgencia && !this.opciones.urgencias.includes(this.filtro.nivel_urgencia)) {
+      this.filtro.nivel_urgencia = '';
+    }
+    if (this.filtro.categoria_incidente && !this.opciones.categorias_incidente.includes(this.filtro.categoria_incidente)) {
+      this.filtro.categoria_incidente = '';
+    }
+    if (this.filtro.estado_solicitud && !this.opciones.estados_solicitud.includes(this.filtro.estado_solicitud)) {
+      this.filtro.estado_solicitud = '';
+    }
+    if (this.filtro.id_taller && !this.opciones.talleres.some((t) => t.id_taller === this.filtro.id_taller)) {
+      this.filtro.id_taller = '';
+    }
+  }
+
+  exportarCsv(): void {
+    if (!this.estadisticas?.reporte?.tabla?.length) {
+      return;
+    }
+
+    const encabezados = ['Grupo', 'Total', 'Atendidas', 'Canceladas', 'Completadas', 'Tasa %'];
+    let csv = encabezados.map((h) => `"${h}"`).join(',') + '\n';
+
+    for (const item of this.estadisticas.reporte.tabla) {
+      const fila = [
+        item.grupo,
+        item.total_solicitudes,
+        item.solicitudes_atendidas,
+        item.solicitudes_canceladas,
+        item.servicios_completados,
+        item.tasa_completacion,
+      ];
+      csv += fila.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',') + '\n';
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `reporte-sistema-${Date.now()}.csv`);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  exportarHtml(): void {
+    if (!this.estadisticas?.reporte?.tabla?.length) {
+      return;
+    }
+
+    const rows = this.estadisticas.reporte.tabla
+      .map(
+        (item) => `
+          <tr>
+            <td>${this.escapeHtml(item.grupo)}</td>
+            <td>${item.total_solicitudes}</td>
+            <td>${item.solicitudes_atendidas}</td>
+            <td>${item.solicitudes_canceladas}</td>
+            <td>${item.servicios_completados}</td>
+            <td>${item.tasa_completacion}</td>
+          </tr>`
+      )
+      .join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reporte Sistema</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+  </style>
+</head>
+<body>
+  <h1>Reporte del Sistema</h1>
+  <p>Generado: ${new Date().toLocaleString()}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Grupo</th>
+        <th>Total</th>
+        <th>Atendidas</th>
+        <th>Canceladas</th>
+        <th>Completadas</th>
+        <th>Tasa %</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `reporte-sistema-${Date.now()}.html`);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   setupReporteCharts(): void {

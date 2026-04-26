@@ -4,7 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import { NgChartsModule } from 'ng2-charts';
-import { EstadisticasTallerResponse, EstadisticasTallerService } from '@core/services/estadisticas-taller.service';
+import {
+  EstadisticasTallerResponse,
+  EstadisticasTallerService,
+  OpcionesFiltrosTaller,
+} from '@core/services/estadisticas-taller.service';
 
 @Component({
   selector: 'app-estadisticas-taller',
@@ -51,10 +55,7 @@ import { EstadisticasTallerResponse, EstadisticasTallerService } from '@core/ser
             <select [(ngModel)]="filtros.nivelUrgencia" (change)="aplicarFiltros()"
               class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
               <option value="">Todas</option>
-              <option value="BAJO">BAJO</option>
-              <option value="MEDIO">MEDIO</option>
-              <option value="ALTO">ALTO</option>
-              <option value="CRITICO">CRITICO</option>
+              <option *ngFor="let item of opciones.urgencias" [value]="item">{{ item }}</option>
             </select>
           </div>
           <div>
@@ -62,10 +63,7 @@ import { EstadisticasTallerResponse, EstadisticasTallerService } from '@core/ser
             <select [(ngModel)]="filtros.estadoSolicitud" (change)="aplicarFiltros()"
               class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
               <option value="">Todos</option>
-              <option value="REGISTRADA">REGISTRADA</option>
-              <option value="EN_PROCESO">EN_PROCESO</option>
-              <option value="ATENDIDA">ATENDIDA</option>
-              <option value="CANCELADA">CANCELADA</option>
+              <option *ngFor="let item of opciones.estados_solicitud" [value]="item">{{ item }}</option>
             </select>
           </div>
           <div>
@@ -73,9 +71,7 @@ import { EstadisticasTallerResponse, EstadisticasTallerService } from '@core/ser
             <select [(ngModel)]="filtros.estadoAsignacion" (change)="aplicarFiltros()"
               class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
               <option value="">Todos</option>
-              <option value="ACTIVA">ACTIVA</option>
-              <option value="FINALIZADA">FINALIZADA</option>
-              <option value="CANCELADA">CANCELADA</option>
+              <option *ngFor="let item of opciones.estados_asignacion" [value]="item">{{ item }}</option>
             </select>
           </div>
           <div>
@@ -83,15 +79,16 @@ import { EstadisticasTallerResponse, EstadisticasTallerService } from '@core/ser
             <select [(ngModel)]="filtros.estadoResultado" (change)="aplicarFiltros()"
               class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
               <option value="">Todos</option>
-              <option value="RESUELTO">RESUELTO</option>
-              <option value="PARCIAL">PARCIAL</option>
-              <option value="PENDIENTE">PENDIENTE</option>
+              <option *ngFor="let item of opciones.estados_resultado" [value]="item">{{ item }}</option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Categoria</label>
-            <input type="text" [(ngModel)]="filtros.categoriaIncidente" (input)="aplicarFiltros()" placeholder="Ej: COLISION_VISIBLE"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white" />
+            <select [(ngModel)]="filtros.categoriaIncidente" (change)="aplicarFiltros()"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
+              <option value="">Todas</option>
+              <option *ngFor="let item of opciones.categorias_incidente" [value]="item">{{ item }}</option>
+            </select>
           </div>
           <div class="flex items-end gap-2">
             <button (click)="cargarEstadisticas()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
@@ -128,7 +125,13 @@ import { EstadisticasTallerResponse, EstadisticasTallerService } from '@core/ser
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Reporte tabular</h3>
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Reporte tabular</h3>
+            <div class="flex gap-2" *ngIf="respuesta.reporte && respuesta.reporte.tabla.length > 0">
+              <button (click)="exportarCsv()" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium">Exportar CSV</button>
+              <button (click)="exportarHtml()" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium">Exportar HTML</button>
+            </div>
+          </div>
 
           <div *ngIf="!respuesta.reporte || respuesta.reporte.tabla.length === 0" class="text-gray-500 dark:text-slate-400">
             No hay registros para los filtros aplicados.
@@ -182,6 +185,14 @@ export class EstadisticasTallerComponent implements OnInit, OnDestroy {
   respuesta: EstadisticasTallerResponse | null = null;
   cargando = false;
   error: string | null = null;
+
+  opciones: OpcionesFiltrosTaller = {
+    urgencias: [],
+    categorias_incidente: [],
+    estados_solicitud: [],
+    estados_asignacion: [],
+    estados_resultado: [],
+  };
 
   filtros = {
     fechaInicio: '',
@@ -261,6 +272,8 @@ export class EstadisticasTallerComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => {
           this.respuesta = data;
+          this.opciones = data.opciones_filtros || this.opciones;
+          this.sincronizarFiltrosConOpciones();
           this.cargando = false;
           this.setupReporteCharts();
           this.cdr.markForCheck();
@@ -271,6 +284,119 @@ export class EstadisticasTallerComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
       });
+  }
+
+  private sincronizarFiltrosConOpciones(): void {
+    if (this.filtros.nivelUrgencia && !this.opciones.urgencias.includes(this.filtros.nivelUrgencia)) {
+      this.filtros.nivelUrgencia = '';
+    }
+    if (this.filtros.categoriaIncidente && !this.opciones.categorias_incidente.includes(this.filtros.categoriaIncidente)) {
+      this.filtros.categoriaIncidente = '';
+    }
+    if (this.filtros.estadoSolicitud && !this.opciones.estados_solicitud.includes(this.filtros.estadoSolicitud)) {
+      this.filtros.estadoSolicitud = '';
+    }
+    if (this.filtros.estadoAsignacion && !this.opciones.estados_asignacion.includes(this.filtros.estadoAsignacion)) {
+      this.filtros.estadoAsignacion = '';
+    }
+    if (this.filtros.estadoResultado && !this.opciones.estados_resultado.includes(this.filtros.estadoResultado)) {
+      this.filtros.estadoResultado = '';
+    }
+  }
+
+  exportarCsv(): void {
+    if (!this.respuesta?.reporte?.tabla?.length) {
+      return;
+    }
+
+    const encabezados = ['Grupo', 'Total', 'Atendidas', 'Canceladas', 'Completadas', 'Tasa %'];
+    let csv = encabezados.map((h) => `"${h}"`).join(',') + '\n';
+
+    for (const item of this.respuesta.reporte.tabla) {
+      const fila = [
+        item.grupo,
+        item.total_solicitudes,
+        item.solicitudes_atendidas,
+        item.solicitudes_canceladas,
+        item.servicios_completados,
+        item.tasa_completacion,
+      ];
+      csv += fila.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',') + '\n';
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `reporte-taller-${Date.now()}.csv`);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  exportarHtml(): void {
+    if (!this.respuesta?.reporte?.tabla?.length) {
+      return;
+    }
+
+    const rows = this.respuesta.reporte.tabla
+      .map(
+        (item) => `
+          <tr>
+            <td>${this.escapeHtml(item.grupo)}</td>
+            <td>${item.total_solicitudes}</td>
+            <td>${item.solicitudes_atendidas}</td>
+            <td>${item.solicitudes_canceladas}</td>
+            <td>${item.servicios_completados}</td>
+            <td>${item.tasa_completacion}</td>
+          </tr>`
+      )
+      .join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reporte Taller</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+  </style>
+</head>
+<body>
+  <h1>Reporte del Taller</h1>
+  <p>Generado: ${new Date().toLocaleString()}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Grupo</th>
+        <th>Total</th>
+        <th>Atendidas</th>
+        <th>Canceladas</th>
+        <th>Completadas</th>
+        <th>Tasa %</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `reporte-taller-${Date.now()}.html`);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   setupReporteCharts(): void {
