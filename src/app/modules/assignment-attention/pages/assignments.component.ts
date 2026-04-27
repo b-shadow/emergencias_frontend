@@ -243,7 +243,7 @@ interface Asignacion {
 
 
           <!-- Previously Completed Services Section -->
-          <div *ngIf="serviciosRealizados[i] && serviciosRealizados[i].length > 0"
+          <div *ngIf="serviciosRealizados[asignacion.id_asignacion] && serviciosRealizados[asignacion.id_asignacion].length > 0"
                class="mt-4 p-4 rounded border-2"
                [ngClass]="isDarkMode ? 'border-amber-600 bg-amber-900 bg-opacity-20' : 'border-amber-200 bg-amber-50'">
             <p class="text-sm font-bold mb-3" [ngClass]="isDarkMode ? 'text-amber-300' : 'text-amber-800'">
@@ -251,7 +251,7 @@ interface Asignacion {
             </p>
 
             <div class="space-y-2">
-              <div *ngFor="let servicio of serviciosRealizados[i]"
+              <div *ngFor="let servicio of serviciosRealizados[asignacion.id_asignacion]"
                    class="p-3 rounded border"
                    [ngClass]="isDarkMode ? 'border-slate-500 bg-slate-700' : 'border-gray-200 bg-gray-50'">
 
@@ -299,22 +299,22 @@ interface Asignacion {
               Servicios Realizados (según tu catálogo):
             </p>
 
-            <div *ngIf="!serviciosCargados[i]" class="text-center py-2">
+            <div *ngIf="!serviciosCargados[asignacion.id_asignacion]" class="text-center py-2">
               <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Cargando servicios...</p>
             </div>
 
-            <div *ngIf="serviciosCargados[i]" class="space-y-2">
-              <div *ngIf="serviciosPorAsignacion[i]?.length === 0" class="text-sm" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
+            <div *ngIf="serviciosCargados[asignacion.id_asignacion]" class="space-y-2">
+              <div *ngIf="serviciosPorAsignacion[asignacion.id_asignacion]?.length === 0" class="text-sm" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
                 No tienes servicios registrados.
               </div>
 
-              <div *ngFor="let servicio of serviciosPorAsignacion[i]; let j = index" class="mb-3 p-3 rounded border" [ngClass]="isDarkMode ? 'border-slate-500 bg-slate-700' : 'border-gray-200 bg-gray-50'">
+              <div *ngFor="let servicio of serviciosPorAsignacion[asignacion.id_asignacion]; let j = index" class="mb-3 p-3 rounded border" [ngClass]="isDarkMode ? 'border-slate-500 bg-slate-700' : 'border-gray-200 bg-gray-50'">
                 <div class="flex items-center mb-2">
                   <input type="checkbox"
                          [(ngModel)]="servicio.realizado"
-                         [id]="'servicio_' + i + '_' + j"
+                         [id]="'servicio_' + asignacion.id_asignacion + '_' + j"
                          class="w-4 h-4">
-                  <label [for]="'servicio_' + i + '_' + j" class="ml-2 text-sm cursor-pointer flex-1 font-medium" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-900'">
+                  <label [for]="'servicio_' + asignacion.id_asignacion + '_' + j" class="ml-2 text-sm cursor-pointer flex-1 font-medium" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-900'">
                     {{ servicio.nombre_servicio }}
                   </label>
                   <span *ngIf="servicio.realizado" class="material-icons text-green-500 text-sm">check_circle</span>
@@ -340,7 +340,7 @@ interface Asignacion {
                       Solución Aplicada (qué se hizo para solucionarlo)
                     </label>
                     <textarea placeholder="Describe la solución implementada..."
-                              [(ngModel)]="solucionResultado[i + '_' + j]"
+                              [(ngModel)]="solucionResultado[asignacion.id_asignacion + '_' + j]"
                               rows="2"
                               class="w-full p-2 rounded border text-xs resize-none mt-1"
                               [ngClass]="isDarkMode ?
@@ -351,10 +351,10 @@ interface Asignacion {
                   <!-- Requiere Seguimiento -->
                   <div class="mb-2 flex items-center">
                     <input type="checkbox"
-                           [(ngModel)]="requiereSeguimiento[i + '_' + j]"
-                           [id]="'seguimiento_' + i + '_' + j"
+                           [(ngModel)]="requiereSeguimiento[asignacion.id_asignacion + '_' + j]"
+                           [id]="'seguimiento_' + asignacion.id_asignacion + '_' + j"
                            class="w-4 h-4">
-                    <label [for]="'seguimiento_' + i + '_' + j" class="ml-2 text-xs cursor-pointer" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
+                    <label [for]="'seguimiento_' + asignacion.id_asignacion + '_' + j" class="ml-2 text-xs cursor-pointer" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
                       ¿Requiere seguimiento posterior?
                     </label>
                   </div>
@@ -365,7 +365,7 @@ interface Asignacion {
                       Observaciones (opcional)
                     </label>
                     <textarea placeholder="Notas o comentarios adicionales..."
-                              [(ngModel)]="observacionesResultado[i + '_' + j]"
+                              [(ngModel)]="observacionesResultado[asignacion.id_asignacion + '_' + j]"
                               rows="2"
                               class="w-full p-2 rounded border text-xs resize-none mt-1"
                               [ngClass]="isDarkMode ?
@@ -375,8 +375,8 @@ interface Asignacion {
                 </div>
               </div>
 
-              <div *ngIf="hayServiciosRealizados(i)">
-                <button (click)="guardarServiciosRealizados(asignacion.id_asignacion, i)"
+              <div *ngIf="hayServiciosRealizados(asignacion.id_asignacion)">
+                <button (click)="guardarServiciosRealizados(asignacion.id_asignacion)"
                         class="w-full px-4 py-2 rounded-lg font-medium transition-all duration-300 mt-3"
                         [ngClass]="isDarkMode ?
                           'bg-blue-600 hover:bg-blue-700 text-white' :
@@ -388,7 +388,7 @@ interface Asignacion {
 
               <!-- Finalizar Asignación Button (only show if NOT ATENDIDA) -->
               <button *ngIf="asignacion.solicitud?.estado_actual !== 'ATENDIDA'"
-                      (click)="finalizarAsignacion(asignacion.id_asignacion, i)"
+                      (click)="finalizarAsignacion(asignacion.id_asignacion)"
                       class="w-full px-4 py-2 rounded-lg font-medium transition-all duration-300 mt-3"
                       [ngClass]="isDarkMode ?
                         'bg-purple-600 hover:bg-purple-700 text-white' :
@@ -472,9 +472,9 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   estadoActualizar: { [key: number]: string } = {};
   informacionAdicional: { [key: number]: string } = {};
   exitoActualizacion: { [key: number]: boolean } = {};
-  serviciosCargados: { [key: number]: boolean } = {};
-  serviciosPorAsignacion: { [key: number]: Servicio[] | undefined } = {};
-  serviciosRealizados: { [key: number]: any[] } = {};
+  serviciosCargados: { [key: string]: boolean } = {};
+  serviciosPorAsignacion: { [key: string]: Servicio[] | undefined } = {};
+  serviciosRealizados: { [key: string]: any[] } = {};
   observacionesResultado: { [key: string]: string } = {};
   solucionResultado: { [key: string]: string } = {};
   requiereSeguimiento: { [key: string]: boolean } = {};
@@ -511,6 +511,9 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   cargarAsignaciones(): void {
     this.isLoading = true;
     this.error = null;
+    this.serviciosCargados = {};
+    this.serviciosPorAsignacion = {};
+    this.serviciosRealizados = {};
 
     this.asignacionesService.obtenerAsignacionesActivas().subscribe({
       next: (data: any) => {
@@ -527,9 +530,9 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
         }
 
         // Cargar servicios automáticamente para cada asignación
-        this.asignaciones.forEach((_, index) => {
-          this.cargarServiciosTaller(index);
-          this.cargarServiciosRealizados(index);
+        this.asignaciones.forEach((asignacion) => {
+          this.cargarServiciosTaller(asignacion.id_asignacion);
+          this.cargarServiciosRealizados(asignacion.id_asignacion);
         });
 
         this.aplicarFiltro();
@@ -550,15 +553,13 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     // Este método se mantiene por compatibilidad, pero no se usa
   }
 
-  cargarServiciosTaller(index: number): void {
-    const asignacion = this.asignaciones[index];
-    const asignacionId = asignacion.id_asignacion as string;
+  cargarServiciosTaller(asignacionId: string): void {
 
     // Solo cargar servicios cuando sea necesario (cuando el usuario lo solicite)
     this.asignacionesService.obtenerServiciosTaller(asignacionId).subscribe({
       next: (servicios: any[]) => {
         // Convertir a array mutable con realizado=false
-        this.serviciosPorAsignacion[index] = servicios.map(s => ({
+        this.serviciosPorAsignacion[asignacionId] = servicios.map(s => ({
           id: s.id_taller_servicio || s.id_servicio,
           id_servicio: s.id_servicio,
           id_taller_servicio: s.id_taller_servicio,
@@ -566,43 +567,42 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
           descripcion: s.descripcion,
           realizado: false
         }));
-        this.serviciosCargados[index] = true;
+        this.serviciosCargados[asignacionId] = true;
         this.cdr.markForCheck();
       },
       error: (err) => {
-        console.warn(`Servicios no disponibles para asignación ${index}:`, err);
-        this.serviciosPorAsignacion[index] = [];
-        this.serviciosCargados[index] = true;
+        console.warn(`Servicios no disponibles para asignación ${asignacionId}:`, err);
+        this.serviciosPorAsignacion[asignacionId] = [];
+        this.serviciosCargados[asignacionId] = true;
       }
     });
   }
 
-  cargarServiciosRealizados(index: number): void {
-    const asignacion = this.asignaciones[index];
-    const asignacionId = asignacion.id_asignacion as string;
+  cargarServiciosRealizados(asignacionId: string): void {
 
     this.asignacionesService.obtenerServiciosRealizados(asignacionId).subscribe({
       next: (servicios: any[]) => {
-        this.serviciosRealizados[index] = servicios || [];
-        console.log(`✅ Servicios realizados cargados para asignación ${index}:`, servicios);
+        this.serviciosRealizados[asignacionId] = servicios || [];
+        console.log(`✅ Servicios realizados cargados para asignación ${asignacionId}:`, servicios);
         this.cdr.markForCheck();
       },
       error: (err) => {
-        console.warn(`No hay servicios realizados para asignación ${index}:`, err);
-        this.serviciosRealizados[index] = [];
+        console.warn(`No hay servicios realizados para asignación ${asignacionId}:`, err);
+        this.serviciosRealizados[asignacionId] = [];
       }
     });
   }
 
-  guardarServiciosRealizados(asignacionId: string | number, index: number): void {
-    const serviciosRealizados = this.serviciosPorAsignacion[index]
+  guardarServiciosRealizados(asignacionId: string | number): void {
+    const key = String(asignacionId);
+    const serviciosRealizados = this.serviciosPorAsignacion[key]
       ?.map((s, j) => ({
         id_taller_servicio: s.id_taller_servicio || s.id,
         realizado: s.realizado,
         diagnostico: s.nombre_servicio,
-        solucion_aplicada: this.solucionResultado[index + '_' + j] || '',
-        observaciones: this.observacionesResultado[index + '_' + j] || '',
-        requiere_seguimiento: this.requiereSeguimiento[index + '_' + j] || false
+        solucion_aplicada: this.solucionResultado[key + '_' + j] || '',
+        observaciones: this.observacionesResultado[key + '_' + j] || '',
+        requiere_seguimiento: this.requiereSeguimiento[key + '_' + j] || false
       }))
       ?.filter(s => s.realizado) || [];
 
@@ -619,22 +619,23 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
           this.mostrarModal = true;
           // Limpiar todos los datos del formulario
           Object.keys(this.observacionesResultado).forEach(key => {
-            if (key.startsWith(index + '_')) {
+            if (key.startsWith(String(asignacionId) + '_')) {
               delete this.observacionesResultado[key];
             }
           });
           Object.keys(this.solucionResultado).forEach(key => {
-            if (key.startsWith(index + '_')) {
+            if (key.startsWith(String(asignacionId) + '_')) {
               delete this.solucionResultado[key];
             }
           });
           Object.keys(this.requiereSeguimiento).forEach(key => {
-            if (key.startsWith(index + '_')) {
+            if (key.startsWith(String(asignacionId) + '_')) {
               delete this.requiereSeguimiento[key];
             }
           });
           // Recargar servicios
-          this.cargarServiciosTaller(index);
+          this.cargarServiciosTaller(String(asignacionId));
+          this.cargarServiciosRealizados(String(asignacionId));
           this.cdr.markForCheck();
         },
         error: (err) => {
@@ -646,12 +647,12 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
       });
   }
 
-  hayServiciosRealizados(index: number): boolean {
-    return (this.serviciosPorAsignacion[index] || []).some(s => s.realizado);
+  hayServiciosRealizados(asignacionId: string): boolean {
+    return (this.serviciosPorAsignacion[asignacionId] || []).some(s => s.realizado);
   }
 
-  finalizarAsignacion(asignacionId: string | number, index: number): void {
-    const asignacion = this.asignaciones[index];
+  finalizarAsignacion(asignacionId: string | number): void {
+    const asignacion = this.asignaciones.find(a => a.id_asignacion === String(asignacionId));
 
     this.asignacionesService.actualizarEstadoAtencion(
       asignacionId,
@@ -660,7 +661,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: () => {
         // Actualizar estado local
-        if (asignacion.solicitud) {
+        if (asignacion?.solicitud) {
           asignacion.solicitud.estado_actual = 'ATENDIDA';
         }
         this.mensajeModal = '✓ Asignación finalizada exitosamente';
@@ -765,13 +766,14 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: () => {
         // Actualizar el estado en el objeto local
-        if (asignacion.solicitud) {
+        if (asignacion?.solicitud) {
           asignacion.solicitud.estado_actual = nuevoEstado;
         }
 
         // Si llegó a ATENDIDA, cargar servicios
         if (nuevoEstado === 'ATENDIDA') {
-          this.cargarServiciosTaller(index);
+          this.cargarServiciosTaller(asignacion.id_asignacion);
+          this.cargarServiciosRealizados(asignacion.id_asignacion);
         }
 
         this.exitoActualizacion[index] = true;
@@ -871,5 +873,8 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     return categorias[categoria || ''] || categoria || 'Sin categoría';
   }
 }
+
+
+
 
 
