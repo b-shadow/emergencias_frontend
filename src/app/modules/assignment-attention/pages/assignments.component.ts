@@ -94,25 +94,10 @@ interface Asignacion {
       </div>
 
       <div class="mb-4 p-4 rounded border" [ngClass]="isDarkMode ? 'border-slate-600 bg-slate-800' : 'border-gray-200 bg-gray-50'">
-        <p class="text-sm font-semibold mb-2" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-800'">Política de cancelación del taller (CU44)</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            [(ngModel)]="politicaCancelacionMonto"
-            placeholder="Monto penalidad"
-            class="p-2 rounded border text-sm"
-            [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'"
-          />
-          <label class="flex items-center gap-2 text-sm" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-700'">
-            <input type="checkbox" [(ngModel)]="politicaCancelacionActiva" />
-            Política activa
-          </label>
-          <button class="px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm" (click)="guardarPoliticaCancelacion()">
-            Guardar política
-          </button>
-        </div>
+        <p class="text-sm font-semibold mb-2" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-800'">Cancelación automática</p>
+        <p class="text-sm" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
+          Si la solicitud se cancela, se aplica automáticamente un cargo del 10% del total cotizado.
+        </p>
       </div>
 
       <!-- Loading State -->
@@ -537,8 +522,6 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   resumenPagos: Record<string, any> = {};
   montoManual: Record<string, number> = {};
   observacionManual: Record<string, string> = {};
-  politicaCancelacionMonto = 0;
-  politicaCancelacionActiva = false;
 
   // Modal properties
   mostrarModal = false;
@@ -563,7 +546,6 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
       });
 
     this.cargarAsignaciones();
-    this.cargarPoliticaCancelacion();
   }
 
   ngOnDestroy(): void {
@@ -727,36 +709,6 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     });
   }
 
-  cargarPoliticaCancelacion(): void {
-    this.pagosService.getPoliticaCancelacion().subscribe({
-      next: (res) => {
-        this.politicaCancelacionMonto = Number(res?.monto_penalidad || 0);
-        this.politicaCancelacionActiva = !!res?.activa;
-        this.cdr.markForCheck();
-      },
-      error: () => {},
-    });
-  }
-
-  guardarPoliticaCancelacion(): void {
-    this.pagosService
-      .upsertPoliticaCancelacion(
-        Number(this.politicaCancelacionMonto || 0),
-        !!this.politicaCancelacionActiva,
-      )
-      .subscribe({
-        next: () => {
-          this.mensajeModal = 'Política de cancelación guardada';
-          this.tipoMensaje = 'exito';
-          this.mostrarModal = true;
-        },
-        error: (err) => {
-          this.mensajeModal = err?.error?.detail || 'No se pudo guardar política de cancelación';
-          this.tipoMensaje = 'error';
-          this.mostrarModal = true;
-        },
-      });
-  }
 
   registrarPagoManual(asignacion: Asignacion): void {
     const idSolicitud = asignacion.id_solicitud;

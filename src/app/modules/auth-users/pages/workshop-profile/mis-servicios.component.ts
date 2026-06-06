@@ -39,7 +39,7 @@ import { WorkshopService, Servicio, TallerServicio } from '@core/services/worksh
             <div class="flex-1">
               <p class="font-semibold text-gray-900 dark:text-white">{{ srv.nombre_servicio }}</p>
               <p class="text-sm text-gray-600 dark:text-slate-400">{{ srv.descripcion }}</p>
-              <p class="text-xs text-gray-500 dark:text-slate-500 mt-1">Tarifa: {{ srv.categoria_tarifa || '-' }} | Base: {{ srv.precio_base || 0 }} | Ida min.: {{ srv.precio_ida_minimo || 0 }}</p>
+              <p class="text-xs text-gray-500 dark:text-slate-500 mt-1">Tarifa: {{ srv.categoria_tarifa || '-' }} | Base: {{ srv.precio_base || 0 }}</p>
             </div>
             <div class="flex items-center gap-2">
               <button (click)="abrirModalEditarEspecificaciones(srv)" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-sm">Editar especificaciones</button>
@@ -95,16 +95,11 @@ import { WorkshopService, Servicio, TallerServicio } from '@core/services/worksh
       </div>
 
       <ng-template #specForm>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 gap-3">
           <label class="text-sm font-semibold text-gray-700 dark:text-slate-300">
             Precio base
             <input type="number" min="0" [(ngModel)]="formEspecificaciones.precio_base" class="mt-1 w-full px-3 py-2 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white" />
             <span class="block mt-1 text-xs text-gray-500 dark:text-slate-400">Monto normal del servicio.</span>
-          </label>
-          <label class="text-sm font-semibold text-gray-700 dark:text-slate-300">
-            Precio ida mínimo
-            <input type="number" min="0" [(ngModel)]="formEspecificaciones.precio_ida_minimo" class="mt-1 w-full px-3 py-2 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white" />
-            <span class="block mt-1 text-xs text-gray-500 dark:text-slate-400">Cobro mínimo por desplazamiento.</span>
           </label>
         </div>
         <label class="mt-3 block text-sm font-semibold text-gray-700 dark:text-slate-300">
@@ -136,7 +131,6 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
     disponible: true,
     observaciones: '',
     precio_base: 0,
-    precio_ida_minimo: 0,
   };
 
   private destroy$ = new Subject<void>();
@@ -176,7 +170,7 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
   }
 
   private resetFormEspecificaciones(): void {
-    this.formEspecificaciones = { disponible: true, observaciones: '', precio_base: 0, precio_ida_minimo: 0 };
+    this.formEspecificaciones = { disponible: true, observaciones: '', precio_base: 0 };
   }
 
   abrirModalConfigServicio(srv: Servicio): void {
@@ -193,7 +187,6 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
       disponible: srv.disponible ?? true,
       observaciones: srv.observaciones || '',
       precio_base: Number(srv.precio_base || 0),
-      precio_ida_minimo: Number(srv.precio_ida_minimo || 0),
     };
     this.mostrarModalEditarEspecificaciones = true;
   }
@@ -206,7 +199,6 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
       disponible: this.formEspecificaciones.disponible,
       observaciones: this.formEspecificaciones.observaciones || null,
       precio_base: Number(this.formEspecificaciones.precio_base) || 0,
-      precio_ida_minimo: Number(this.formEspecificaciones.precio_ida_minimo) || 0,
     };
   }
 

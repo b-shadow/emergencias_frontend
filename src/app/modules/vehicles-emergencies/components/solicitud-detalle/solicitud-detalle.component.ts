@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+﻿import { Component, OnInit, ChangeDetectorRef, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -93,7 +93,7 @@ interface Evidencia {
           <div class="flex items-start justify-between mb-4">
             <div class="flex-1">
               <p class="text-sm font-medium mb-1" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-                Código de Solicitud
+                CÃ³digo de Solicitud
               </p>
               <h1 class="text-3xl font-bold" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
                 {{ solicitud.codigo }}
@@ -122,7 +122,7 @@ interface Evidencia {
 
             <!-- Distance -->
             <div class="p-3 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
-              <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Radio de búsqueda</p>
+              <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Radio de bÃºsqueda</p>
               <p class="font-bold flex items-center mt-1" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
                 <span class="material-icons text-base mr-1">my_location</span>
                 {{ solicitud.radio_busqueda_km }} km
@@ -131,7 +131,7 @@ interface Evidencia {
 
             <!-- Category -->
             <div class="p-3 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
-              <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Categoría</p>
+              <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">CategorÃ­a</p>
               <p class="font-bold text-sm mt-1" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
                 {{ getCategoriaNombre(solicitud.categoria_incidente) }}
               </p>
@@ -152,7 +152,7 @@ interface Evidencia {
              [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-gray-200'">
           <h2 class="text-xl font-bold mb-3" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
             <span class="material-icons text-base mr-2 align-middle">description</span>
-            Descripción
+            DescripciÃ³n
           </h2>
           <p class="text-base leading-relaxed" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
             {{ solicitud.descripcion }}
@@ -182,7 +182,7 @@ interface Evidencia {
 
           <ng-template #sinEvidencias>
             <p class="text-sm" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-              Esta solicitud no tiene imágenes adjuntas.
+              Esta solicitud no tiene imÃ¡genes adjuntas.
             </p>
           </ng-template>
         </div>
@@ -237,7 +237,7 @@ interface Evidencia {
              [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-gray-200'">
           <h2 class="text-lg font-bold mb-4" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
             <span class="material-icons text-base mr-2 align-middle">person</span>
-            Información del Cliente
+            InformaciÃ³n del Cliente
           </h2>
           <div class="grid md:grid-cols-2 gap-4">
             <div class="p-3 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
@@ -247,7 +247,7 @@ interface Evidencia {
               </p>
             </div>
             <div class="p-3 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
-              <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Teléfono</p>
+              <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">TelÃ©fono</p>
               <p class="font-semibold mt-1" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
                 {{ solicitud.cliente?.telefono || 'No disponible' }}
               </p>
@@ -260,7 +260,7 @@ interface Evidencia {
              [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-gray-200'">
           <h2 class="text-lg font-bold mb-4" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
             <span class="material-icons text-base mr-2 align-middle">directions_car</span>
-            Información del Vehículo
+            InformaciÃ³n del VehÃ­culo
           </h2>
           <div class="grid md:grid-cols-2 gap-4">
             <div class="p-3 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
@@ -314,7 +314,7 @@ interface Evidencia {
                      'bg-slate-600 border-slate-500 text-white placeholder-slate-400' :
                      'bg-white border-gray-300 text-gray-900 placeholder-gray-500'">
             <p class="text-xs mt-1" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-              Indica cuánto tiempo aproximadamente tardará tu equipo en llegar al lugar
+              Indica cuÃ¡nto tiempo aproximadamente tardarÃ¡ tu equipo en llegar al lugar
             </p>
           </div>
 
@@ -333,12 +333,16 @@ interface Evidencia {
               </div>
               <div class="pt-2 border-t flex items-center justify-between text-sm font-bold" [ngClass]="isDarkMode ? 'border-slate-500 text-white' : 'border-gray-200 text-gray-900'">
                 <span>Total</span>
-                <span>{{ (getSubtotalCotizacionLocal() + costoIdaCotizacion) | number:'1.2-2' }} Bs</span>
+                <span>{{ getSubtotalCotizacionLocal() | number:'1.2-2' }} Bs</span>
+              </div>
+              <div class="flex items-center justify-between text-xs" [ngClass]="isDarkMode ? 'text-amber-300' : 'text-amber-700'">
+                <span>CancelaciÃ³n automÃ¡tica (10%)</span>
+                <span>{{ getCargoCancelacionEstimadoLocal() | number:'1.2-2' }} Bs</span>
               </div>
             </div>
             <ng-template #sinSeleccion>
               <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-                Todavía no has seleccionado servicios.
+                TodavÃ­a no has seleccionado servicios.
               </p>
             </ng-template>
           </div>
@@ -375,8 +379,8 @@ interface Evidencia {
             </ng-template>
             <div class="mt-3 text-sm" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-800'">
               Subtotal: <strong>{{ getSubtotalCotizacionLocal() | number:'1.2-2' }} Bs</strong> |
-              Ida: <strong>{{ costoIdaCotizacion | number:'1.2-2' }} Bs</strong> |
-              Total: <strong>{{ (getSubtotalCotizacionLocal() + costoIdaCotizacion) | number:'1.2-2' }} Bs</strong>
+              CancelaciÃ³n automÃ¡tica (10%): <strong>{{ getCargoCancelacionEstimadoLocal() | number:'1.2-2' }} Bs</strong> |
+              Total: <strong>{{ getSubtotalCotizacionLocal() | number:'1.2-2' }} Bs</strong>
             </div>
           </div>
 
@@ -387,7 +391,7 @@ interface Evidencia {
             </label>
             <textarea
                    [(ngModel)]="mensajePropuesta"
-                   placeholder="Ej: Podemos atender en los próximos 20 minutos, disponemos de equipos especializados..."
+                   placeholder="Ej: Podemos atender en los prÃ³ximos 20 minutos, disponemos de equipos especializados..."
                    rows="3"
                    maxlength="1000"
                    class="w-full p-2 rounded border text-sm resize-none"
@@ -406,7 +410,7 @@ interface Evidencia {
                      [(ngModel)]="disponibilidadConfirmada"
                      class="w-4 h-4">
               <span class="text-sm" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-700'">
-                Confirmo que mi taller está disponible para atender esta emergencia
+                Confirmo que mi taller estÃ¡ disponible para atender esta emergencia
               </span>
             </label>
           </div>
@@ -439,7 +443,7 @@ interface Evidencia {
               check_circle
             </span>
             <p class="text-sm font-semibold" [ngClass]="isDarkMode ? 'text-green-300' : 'text-green-800'">
-              ¡Postulación enviada exitosamente! Serás notificado cuando el cliente responda.
+              Â¡PostulaciÃ³n enviada exitosamente! SerÃ¡s notificado cuando el cliente responda.
             </p>
           </div>
 
@@ -460,14 +464,14 @@ interface Evidencia {
              [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-white border-gray-200'">
           <h2 class="text-lg font-bold mb-3" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
             <span class="material-icons text-base mr-2 align-middle">place</span>
-            Ubicación
+            UbicaciÃ³n
           </h2>
           <div class="p-4 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
             <p class="text-sm" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
               <strong>Coordenadas:</strong> {{ solicitud.ubicacion.lat }}, {{ solicitud.ubicacion.long }}
             </p>
             <p class="text-sm mt-2" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
-              <strong>Radio de búsqueda:</strong> {{ solicitud.radio_busqueda_km }} km
+              <strong>Radio de bÃºsqueda:</strong> {{ solicitud.radio_busqueda_km }} km
             </p>
             <div class="mt-4 rounded overflow-hidden border h-80 w-full" [ngClass]="isDarkMode ? 'border-slate-600 bg-slate-600' : 'border-gray-300 bg-gray-100'"
                  #mapContainer id="mapContainer" style="position: relative; min-height: 320px;"></div>
@@ -531,9 +535,9 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
     categoria_tarifa?: string | null;
     incluido_en_solicitud?: boolean;
   }[] = [];
-  costoIdaCotizacion = 0;
   etaSugeridoMin = 15;
   distanciaBaseKm = 0;
+  private rutaTrayectoGeojson: any | null = null;
   private tallerUbicacion: { lat: number; lng: number } | null = null;
   etaEditadoManualmente = false;
 
@@ -635,7 +639,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
         this.recalcularEtaConRutaOSRM();
         this.isLoading = false;
         this.cdr.markForCheck();
-        // Inicializar mapa después de que los datos se hayan asignado
+        // Inicializar mapa despuÃ©s de que los datos se hayan asignado
         setTimeout(() => {
           this.inicializarMapa();
         }, 100);
@@ -683,7 +687,6 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
             categoria_tarifa: s.categoria_tarifa || null,
             incluido_en_solicitud: s.incluido_en_solicitud !== false
           })),
-          costo_ida: Number(this.costoIdaCotizacion || 0),
           detalle: this.mensajePropuesta.trim() || null
         }).subscribe({
           next: () => {
@@ -702,7 +705,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
         });
       },
       error: (err) => {
-        this.errorPostulacion = err?.error?.detail || 'Error al enviar postulación';
+        this.errorPostulacion = err?.error?.detail || 'Error al enviar postulaciÃ³n';
         this.enviando = false;
         console.error(err);
         this.cdr.markForCheck();
@@ -751,9 +754,6 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
       categoria_tarifa: servicio.categoria_tarifa || '',
       incluido_en_solicitud: this.esServicioSolicitado(servicio.nombre_servicio || '')
     });
-    if (this.costoIdaCotizacion <= 0 && typeof servicio.precio_ida_minimo === 'number') {
-      this.costoIdaCotizacion = Number(servicio.precio_ida_minimo);
-    }
   }
 
   hasServicioSeleccionado(idTallerServicio: string): boolean {
@@ -773,6 +773,10 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
 
   getSubtotalCotizacionLocal(): number {
     return this.serviciosCotizacion.reduce((acc, s) => acc + Number(s.precio_servicio || 0), 0);
+  }
+
+  getCargoCancelacionEstimadoLocal(): number {
+    return this.getSubtotalCotizacionLocal() * 0.1;
   }
 
   private esServicioSolicitado(nombreServicio: string): boolean {
@@ -800,9 +804,10 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
     const destinoLng = this.solicitud.ubicacion.long;
     if (![origenLat, origenLng, destinoLat, destinoLng].every((v) => Number.isFinite(v))) return;
 
-    const url = `https://router.project-osrm.org/route/v1/driving/${origenLng},${origenLat};${destinoLng},${destinoLat}?overview=false&alternatives=false&steps=false`;
-    this.http.get<any>(url).subscribe({
-      next: (resp) => {
+    const url = `https://router.project-osrm.org/route/v1/driving/${origenLng},${origenLat};${destinoLng},${destinoLat}?overview=full&geometries=geojson&alternatives=false&steps=false`;
+    fetch(url)
+      .then((resp) => resp.ok ? resp.json() : Promise.reject(resp))
+      .then((resp) => {
         const route = resp?.routes?.[0];
         const distanceMeters = Number(route?.distance || 0);
         const durationSec = Number(route?.duration || 0);
@@ -816,12 +821,15 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
             this.tiempoEstimado = eta;
           }
         }
+        this.rutaTrayectoGeojson = route?.geometry ? { type: 'Feature', geometry: route.geometry, properties: {} } : null;
+        this.renderRouteOnMap();
         this.cdr.markForCheck();
-      },
-      error: () => {
+      })
+      .catch(() => {
         // fallback: se mantiene ETA sugerido por distancia base local
-      }
-    });
+        this.rutaTrayectoGeojson = null;
+        this.renderRouteOnMap();
+      });
   }
 
   goBack(): void {
@@ -861,12 +869,12 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
 
   getCategoriaNombre(categoria?: string): string {
     const categorias: { [key: string]: string } = {
-      'MECANICO': 'Problema Mecánico',
-      'ELECTRICO': 'Problema Eléctrico',
-      'ESTRUCTURAL': 'Daño Estructural',
+      'MECANICO': 'Problema MecÃ¡nico',
+      'ELECTRICO': 'Problema ElÃ©ctrico',
+      'ESTRUCTURAL': 'DaÃ±o Estructural',
       'OTRO': 'Otro'
     };
-    return categorias[categoria || ''] || categoria || 'Sin categoría';
+    return categorias[categoria || ''] || categoria || 'Sin categorÃ­a';
   }
 
   inicializarMapa(): void {
@@ -875,9 +883,9 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
       return;
     }
 
-    console.log('Iniciando mapa con ubicación:', this.solicitud.ubicacion);
+    console.log('Iniciando mapa con ubicaciÃ³n:', this.solicitud.ubicacion);
 
-    // Cargar MapLibre GL CSS si no está ya cargada
+    // Cargar MapLibre GL CSS si no estÃ¡ ya cargada
     if (!document.querySelector('link[href*="maplibre-gl.css"]')) {
       const link = document.createElement('link');
       link.href = 'https://unpkg.com/maplibre-gl@3.6.0/dist/maplibre-gl.css';
@@ -885,7 +893,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
       document.head.appendChild(link);
     }
 
-    // Verificar si MapLibre GL ya está cargado
+    // Verificar si MapLibre GL ya estÃ¡ cargado
     if (typeof (window as any).maplibregl !== 'undefined') {
       this.initializeMapLibre();
       return;
@@ -931,7 +939,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
       const maplibregl = (window as any).maplibregl;
 
       if (!maplibregl) {
-        console.error('maplibregl no está disponible globalmente');
+        console.error('maplibregl no estÃ¡ disponible globalmente');
         this.isLoadingMap = false;
         return;
       }
@@ -945,7 +953,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
               type: 'raster',
               tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
               tileSize: 256,
-              attribution: '© OpenStreetMap contributors'
+              attribution: 'Â© OpenStreetMap contributors'
             }
           },
           layers: [
@@ -995,42 +1003,10 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
     const lat = this.solicitud.ubicacion.lat;
     const lng = this.solicitud.ubicacion.long;
     const radio = this.solicitud.radio_busqueda_km;
-    const maplibregl = (window as any).maplibregl;
 
     try {
-      // Crear marcador personalizado
-      const markerEl = document.createElement('div');
-      markerEl.style.width = '32px';
-      markerEl.style.height = '40px';
-      markerEl.style.cursor = 'pointer';
-      markerEl.innerHTML = `
-        <svg viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 0C9.4 0 4 5.4 4 12c0 8 12 28 12 28s12-20 12-28c0-6.6-5.4-12-12-12z" fill="#ef4444" stroke="#fff" stroke-width="2"/>
-          <circle cx="16" cy="12" r="5" fill="#fff"/>
-        </svg>
-      `;
-
-      const marker = new maplibregl.Marker({
-        element: markerEl
-      })
-        .setLngLat([lng, lat])
-        .addTo(this.map);
-
-      // Crear popup con información
-      const popupContent = document.createElement('div');
-      popupContent.style.textAlign = 'center';
-      popupContent.style.padding = '8px';
-      popupContent.innerHTML = `
-        <div>
-          <strong>${this.solicitud.codigo}</strong><br>
-          Radio: ${radio} km<br>
-          <small>${lat.toFixed(4)}, ${lng.toFixed(4)}</small>
-        </div>
-      `;
-
-      marker.setPopup(new maplibregl.Popup({ offset: 25 }).setDOMContent(popupContent));
-
-      // Cargar Turf.js para crear el buffer circular
+      this.addWorkshopAndAccidentMarkers();
+      this.renderRouteOnMap();
       this.loadTurfAndCreateCircle(lat, lng, radio);
 
       console.log('Elementos del mapa agregados exitosamente');
@@ -1039,8 +1015,83 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
     }
   }
 
+  private addWorkshopAndAccidentMarkers(): void {
+    if (!this.map || !this.solicitud) return;
+    const maplibregl = (window as any).maplibregl;
+    const destinoLat = this.solicitud.ubicacion.lat;
+    const destinoLng = this.solicitud.ubicacion.long;
+    const origenLat = this.tallerUbicacion?.lat ?? destinoLat;
+    const origenLng = this.tallerUbicacion?.lng ?? destinoLng;
+
+    const workshopEl = document.createElement('div');
+    workshopEl.style.width = '34px';
+    workshopEl.style.height = '34px';
+    workshopEl.style.borderRadius = '999px';
+    workshopEl.style.background = '#1d4ed8';
+    workshopEl.style.border = '2px solid white';
+    workshopEl.style.display = 'flex';
+    workshopEl.style.alignItems = 'center';
+    workshopEl.style.justifyContent = 'center';
+    workshopEl.innerHTML = '<span style="color:white;font-size:18px;line-height:1">🏭</span>';
+
+    new maplibregl.Marker({ element: workshopEl })
+      .setLngLat([origenLng, origenLat])
+      .setPopup(new maplibregl.Popup({ offset: 20 }).setText('Taller'))
+      .addTo(this.map);
+
+    const accidentEl = document.createElement('div');
+    accidentEl.style.width = '32px';
+    accidentEl.style.height = '40px';
+    accidentEl.style.cursor = 'pointer';
+    accidentEl.innerHTML = `
+      <svg viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 0C9.4 0 4 5.4 4 12c0 8 12 28 12 28s12-20 12-28c0-6.6-5.4-12-12-12z" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+        <circle cx="16" cy="12" r="5" fill="#fff"/>
+      </svg>
+    `;
+
+    new maplibregl.Marker({ element: accidentEl })
+      .setLngLat([destinoLng, destinoLat])
+      .setPopup(new maplibregl.Popup({ offset: 25 }).setText('Accidente'))
+      .addTo(this.map);
+  }
+
+  private renderRouteOnMap(): void {
+    if (!this.map || !this.solicitud) return;
+
+    if (this.map.getLayer('ruta-taller-accidente-linea')) {
+      this.map.removeLayer('ruta-taller-accidente-linea');
+    }
+    if (this.map.getSource('ruta-taller-accidente')) {
+      this.map.removeSource('ruta-taller-accidente');
+    }
+
+    if (this.rutaTrayectoGeojson) {
+      this.map.addSource('ruta-taller-accidente', {
+        type: 'geojson',
+        data: this.rutaTrayectoGeojson,
+      });
+      this.map.addLayer({
+        id: 'ruta-taller-accidente-linea',
+        type: 'line',
+        source: 'ruta-taller-accidente',
+        paint: {
+          'line-color': '#16a34a',
+          'line-width': 5,
+          'line-opacity': 0.9,
+          'line-dasharray': [2, 2],
+        },
+      });
+    }
+
+    const bounds = new maplibregl.LngLatBounds();
+    if (this.tallerUbicacion) bounds.extend([this.tallerUbicacion.lng, this.tallerUbicacion.lat]);
+    bounds.extend([this.solicitud.ubicacion.long, this.solicitud.ubicacion.lat]);
+    this.map.fitBounds(bounds, { padding: 60, maxZoom: 15 });
+  }
+
   private loadTurfAndCreateCircle(lat: number, lng: number, radiusKm: number): void {
-    // Verificar si Turf ya está cargado
+    // Verificar si Turf ya estÃ¡ cargado
     if (typeof (window as any).turf !== 'undefined') {
       this.createCircleWithTurf(lat, lng, radiusKm);
       return;
@@ -1057,7 +1108,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
     };
 
     script.onerror = () => {
-      console.error('Error loading Turf.js, usando polígono alternativo');
+      console.error('Error loading Turf.js, usando polÃ­gono alternativo');
       this.createCirclePolygonManual(lat, lng, radiusKm);
     };
 
@@ -1072,7 +1123,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
       const center = turf.point([lng, lat]);
       const circlePolygon = turf.circle(center, radiusKm, { units: 'kilometers', steps: 64 });
 
-      console.log('Círculo creado con Turf:', circlePolygon);
+      console.log('CÃ­rculo creado con Turf:', circlePolygon);
 
       // Agregar o actualizar la fuente
       if (this.map.getSource('search-circle')) {
@@ -1083,7 +1134,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
           data: circlePolygon
         });
 
-        // Capa del círculo relleno
+        // Capa del cÃ­rculo relleno
         this.map.addLayer({
           id: 'search-circle-fill',
           type: 'fill',
@@ -1094,7 +1145,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
           }
         });
 
-        // Capa del borde del círculo
+        // Capa del borde del cÃ­rculo
         this.map.addLayer({
           id: 'search-circle-stroke',
           type: 'line',
@@ -1117,7 +1168,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
 
     try {
       const circlePolygon = this.createCirclePolygon(lat, lng, radiusKm);
-      console.log('Polígono circular manual creado:', circlePolygon);
+      console.log('PolÃ­gono circular manual creado:', circlePolygon);
 
       // Agregar o actualizar la fuente
       if (this.map.getSource('search-circle')) {
@@ -1128,7 +1179,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
           data: circlePolygon
         });
 
-        // Capa del círculo relleno
+        // Capa del cÃ­rculo relleno
         this.map.addLayer({
           id: 'search-circle-fill',
           type: 'fill',
@@ -1139,7 +1190,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
           }
         });
 
-        // Capa del borde del círculo
+        // Capa del borde del cÃ­rculo
         this.map.addLayer({
           id: 'search-circle-stroke',
           type: 'line',
@@ -1156,12 +1207,12 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
     }
   }
 
-  // Crear un polígono circular GeoJSON con radio en kilómetros
+  // Crear un polÃ­gono circular GeoJSON con radio en kilÃ³metros
   private createCirclePolygon(lat: number, lng: number, radiusKm: number): any {
-    const points = 64; // Número de puntos para suavidad
+    const points = 64; // NÃºmero de puntos para suavidad
     const coordinates: [number, number][] = [];
 
-    // Factor de conversión: 1 grado de latitud ≈ 111 km
+    // Factor de conversiÃ³n: 1 grado de latitud â‰ˆ 111 km
     const latOffset = radiusKm / 111;
     // Para longitud, depende de la latitud
     const lngOffset = radiusKm / (111 * Math.cos(lat * Math.PI / 180));
@@ -1173,7 +1224,7 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
       coordinates.push([x, y]);
     }
 
-    // Cerrar el polígono
+    // Cerrar el polÃ­gono
     coordinates.push(coordinates[0]);
 
     return {
@@ -1195,5 +1246,6 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
     }
   }
 }
+
 
 

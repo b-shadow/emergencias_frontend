@@ -14,7 +14,6 @@ export interface CotizacionPayload {
     categoria_tarifa?: string | null;
     incluido_en_solicitud?: boolean;
   }[];
-  costo_ida?: number;
   tipo_pintura?: string | null;
   detalle?: string | null;
 }
@@ -24,7 +23,6 @@ export interface CotizacionResponse {
   id_postulacion: string;
   id_taller_servicio: string;
   precio_servicio: number;
-  costo_ida: number;
   precio_total_estimado: number;
   servicios?: {
     id_taller_servicio: string;

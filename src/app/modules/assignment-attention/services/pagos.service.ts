@@ -19,15 +19,4 @@ export class PagosService {
       observacion: observacion || null,
     });
   }
-
-  getPoliticaCancelacion(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/taller/politica-cancelacion`);
-  }
-
-  upsertPoliticaCancelacion(montoPenalidad: number, activa: boolean): Observable<any> {
-    return this.http.put(`${this.apiUrl}/taller/politica-cancelacion`, {
-      monto_penalidad: montoPenalidad,
-      activa,
-    });
-  }
 }

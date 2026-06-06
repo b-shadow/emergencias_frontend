@@ -220,15 +220,18 @@ interface Postulacion {
                   [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'" />
               </div>
               <div class="grid grid-cols-2 gap-2">
-                <input type="number" min="0" [(ngModel)]="cotizacionForm[postulacion.id_postulacion].costo_ida"
-                  placeholder="Costo ida"
-                  class="p-2 rounded border text-sm"
-                  [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'" />
                 <input type="text" [value]="getSubtotalCotizacion(postulacion.id_postulacion) | number:'1.2-2'" disabled
                   placeholder="Subtotal"
                   class="p-2 rounded border text-sm opacity-70"
                   [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'" />
+                <input type="text" [value]="getCargoCancelacionEstimado(postulacion.id_postulacion) | number:'1.2-2'" disabled
+                  placeholder="Cancelación 10%"
+                  class="p-2 rounded border text-sm opacity-70"
+                  [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'" />
               </div>
+              <p class="text-xs" [ngClass]="isDarkMode ? 'text-amber-300' : 'text-amber-700'">
+                Si el cliente cancela, se cobrará automáticamente el 10% del total cotizado.
+              </p>
               <input type="text" [(ngModel)]="cotizacionForm[postulacion.id_postulacion].tipo_pintura"
                 placeholder="Tipo de pintura (chaperio)"
                 class="w-full p-2 rounded border text-sm"
@@ -320,7 +323,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       categoria_tarifa?: string;
       incluido_en_solicitud: boolean;
     }[];
-    costo_ida: number;
     tipo_pintura: string;
     detalle: string;
   }> = {};
@@ -429,7 +431,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       if (!this.cotizacionForm[p.id_postulacion]) {
           this.cotizacionForm[p.id_postulacion] = {
             servicios: [],
-            costo_ida: 0,
             tipo_pintura: '',
             detalle: '',
           };
@@ -453,7 +454,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
             categoria_tarifa: s.categoria_tarifa || '',
             incluido_en_solicitud: s.incluido_en_solicitud !== false,
           })),
-          costo_ida: cot.costo_ida,
           tipo_pintura: cot.tipo_pintura || '',
           detalle: '',
         };
@@ -485,9 +485,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       categoria_tarifa: servicio.categoria_tarifa || '',
       incluido_en_solicitud: true,
     });
-    if (form.costo_ida <= 0 && typeof servicio.precio_ida_minimo === 'number') {
-      form.costo_ida = Number(servicio.precio_ida_minimo);
-    }
     if ((servicio.categoria_tarifa || '').toUpperCase() === 'CHAPERIO' && !form.tipo_pintura) {
       form.tipo_pintura = servicio.tipo_pintura_chaperio || '';
     }
@@ -500,6 +497,10 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
   getSubtotalCotizacion(idPostulacion: string): number {
     const servicios = this.cotizacionForm[idPostulacion]?.servicios || [];
     return servicios.reduce((acc, s) => acc + Number(s.precio_servicio || 0), 0);
+  }
+
+  getCargoCancelacionEstimado(idPostulacion: string): number {
+    return this.getSubtotalCotizacion(idPostulacion) * 0.1;
   }
 
   guardarCotizacion(idPostulacion: string): void {
@@ -516,7 +517,6 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
         categoria_tarifa: s.categoria_tarifa || null,
         incluido_en_solicitud: s.incluido_en_solicitud,
       })),
-      costo_ida: Number(form.costo_ida || 0),
       tipo_pintura: form.tipo_pintura || null,
       detalle: form.detalle || null,
     }).subscribe({
