@@ -11,6 +11,12 @@ import {
   ClienteRegisterRequest,
   TallerRegisterRequest,
   TallerRegisterResponse,
+  SubscriptionPlan,
+  SubscriptionManagementResponse,
+  SubscriptionRenewCheckoutRequest,
+  TallerRegisterCheckoutRequest,
+  TallerRegisterCheckoutResponse,
+  TallerRegisterCheckoutValidationResponse,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   RolUsuario
@@ -44,6 +50,42 @@ export class AuthService {
 
   registrarTaller(data: TallerRegisterRequest): Observable<TallerRegisterResponse> {
     return this.http.post<TallerRegisterResponse>(`${this.apiUrl}/auth/register-taller`, data);
+  }
+
+  obtenerPlanesSuscripcion(): Observable<SubscriptionPlan[]> {
+    return this.http.get<SubscriptionPlan[]>(`${this.apiUrl}/auth/subscription-plans`);
+  }
+
+  iniciarCheckoutRegistroTaller(data: TallerRegisterCheckoutRequest): Observable<TallerRegisterCheckoutResponse> {
+    return this.http.post<TallerRegisterCheckoutResponse>(`${this.apiUrl}/auth/register-taller/checkout`, data);
+  }
+
+  validarCheckoutRegistroTaller(sessionId: string, token: string): Observable<TallerRegisterCheckoutValidationResponse> {
+    return this.http.post<TallerRegisterCheckoutValidationResponse>(
+      `${this.apiUrl}/auth/register-taller/checkout/validate?session_id=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(token)}`,
+      {}
+    );
+  }
+
+  obtenerMiSuscripcion(): Observable<SubscriptionManagementResponse> {
+    return this.http.get<SubscriptionManagementResponse>(`${this.apiUrl}/auth/subscriptions/me`);
+  }
+
+  renovarMiSuscripcion(idPlan: string): Observable<SubscriptionManagementResponse> {
+    return this.http.post<SubscriptionManagementResponse>(`${this.apiUrl}/auth/subscriptions/me/renew`, {
+      id_plan: idPlan,
+    });
+  }
+
+  iniciarCheckoutRenovacionSuscripcion(data: SubscriptionRenewCheckoutRequest): Observable<TallerRegisterCheckoutResponse> {
+    return this.http.post<TallerRegisterCheckoutResponse>(`${this.apiUrl}/auth/subscriptions/me/renew/checkout`, data);
+  }
+
+  validarCheckoutRenovacionSuscripcion(sessionId: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/auth/subscriptions/me/renew/checkout/validate?session_id=${encodeURIComponent(sessionId)}`,
+      {}
+    );
   }
 
   forgotPassword(data: ForgotPasswordRequest): Observable<any> {
@@ -145,5 +187,9 @@ export class AuthService {
 
   isCliente(): boolean {
     return this.getUserRole() === RolUsuario.CLIENTE;
+  }
+
+  isTrabajador(): boolean {
+    return this.getUserRole() === RolUsuario.TRABAJADOR;
   }
 }

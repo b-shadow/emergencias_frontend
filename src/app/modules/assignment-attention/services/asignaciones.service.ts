@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { OfflineCacheService } from '@core/services/offline-cache.service';
 
 enum EstadoAsignacion {
   ASIGNADA = 'ASIGNADA',
@@ -16,14 +18,21 @@ enum EstadoAsignacion {
 })
 export class AsignacionesService {
   private apiUrl = `${environment.apiUrl}/asignaciones`;
+  private cacheKey = 'offline_asignaciones_activas';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private cache: OfflineCacheService,
+  ) {}
 
   /**
    * Obtiene todas las asignaciones activas del taller (CU-20)
    */
   obtenerAsignacionesActivas(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/activas`);
+    return this.http.get(`${this.apiUrl}/activas`).pipe(
+      tap((rows) => this.cache.set(this.cacheKey, rows)),
+      catchError(() => of(this.cache.get<any[]>(this.cacheKey) || [])),
+    );
   }
 
   /**

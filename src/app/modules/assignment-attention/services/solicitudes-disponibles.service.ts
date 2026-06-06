@@ -1,15 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { OfflineCacheService } from '@core/services/offline-cache.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SolicitudesDisponiblesService {
   private apiUrl = `${environment.apiUrl}/solicitudes_emergencia`;
+  private cacheKey = 'offline_solicitudes_disponibles';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private cache: OfflineCacheService,
+  ) {}
 
   /**
    * CU-17: Lista solicitudes de emergencia disponibles para el taller
@@ -23,7 +29,10 @@ export class SolicitudesDisponiblesService {
       skip: skip.toString(),
       limit: limit.toString()
     };
-    return this.http.get(`${this.apiUrl}/disponibles`, { params });
+    return this.http.get(`${this.apiUrl}/disponibles`, { params }).pipe(
+      tap((rows) => this.cache.set(this.cacheKey, rows)),
+      catchError(() => of(this.cache.get<any[]>(this.cacheKey) || [])),
+    );
   }
 
   /**

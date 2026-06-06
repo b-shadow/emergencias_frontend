@@ -40,15 +40,27 @@ export interface TallerServicio {
   estado: string; // ACTIVO | INACTIVO
   disponible: boolean;
   observaciones: string | null;
+  categoria_tarifa?: 'MECANICO' | 'ELECTRONICO' | 'CHAPERIO';
+  precio_base?: number;
+  precio_ida_minimo?: number;
+  tipo_pintura_chaperio?: string | null;
 }
 
 export interface TallerServicioCreate {
   id_servicio: string;
   disponible: boolean;
   observaciones?: string | null;
+  categoria_tarifa?: 'MECANICO' | 'ELECTRONICO' | 'CHAPERIO';
+  precio_base?: number;
+  precio_ida_minimo?: number;
+  tipo_pintura_chaperio?: string | null;
 }
 
 export interface TallerServicioUpdate {
   disponible: boolean;
   observaciones?: string | null;
+  categoria_tarifa?: 'MECANICO' | 'ELECTRONICO' | 'CHAPERIO';
+  precio_base?: number;
+  precio_ida_minimo?: number;
+  tipo_pintura_chaperio?: string | null;
 }

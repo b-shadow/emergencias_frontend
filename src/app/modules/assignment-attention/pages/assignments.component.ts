@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AsignacionesService } from '@modules/assignment-attention/services/asignaciones.service';
+import { PagosService } from '@modules/assignment-attention/services/pagos.service';
 import { ThemeService } from '@core/services/theme.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -79,10 +80,10 @@ interface Asignacion {
       <div class="flex items-center justify-between mb-6">
         <div>
           <h1 class="text-3xl font-bold" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
-            Atención Asignada
+            AtenciÃ³n Asignada
           </h1>
           <p class="text-sm mt-1" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-            {{ asignaciones.length }} asignación{{ asignaciones.length !== 1 ? 'es' : '' }} activa{{ asignaciones.length !== 1 ? 's' : '' }}
+            {{ asignacionesFiltradas.length }} asignaciÃ³n{{ asignacionesFiltradas.length !== 1 ? 'es' : '' }} activa{{ asignacionesFiltradas.length !== 1 ? 's' : '' }}
           </p>
         </div>
         <button (click)="onRefresh()"
@@ -90,6 +91,28 @@ interface Asignacion {
                 [ngClass]="isDarkMode ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'">
           <span class="material-icons align-middle text-xl">refresh</span>
         </button>
+      </div>
+
+      <div class="mb-4 p-4 rounded border" [ngClass]="isDarkMode ? 'border-slate-600 bg-slate-800' : 'border-gray-200 bg-gray-50'">
+        <p class="text-sm font-semibold mb-2" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-800'">Política de cancelación del taller (CU44)</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="politicaCancelacionMonto"
+            placeholder="Monto penalidad"
+            class="p-2 rounded border text-sm"
+            [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'"
+          />
+          <label class="flex items-center gap-2 text-sm" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-700'">
+            <input type="checkbox" [(ngModel)]="politicaCancelacionActiva" />
+            Política activa
+          </label>
+          <button class="px-3 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm" (click)="guardarPoliticaCancelacion()">
+            Guardar política
+          </button>
+        </div>
       </div>
 
       <!-- Loading State -->
@@ -113,12 +136,12 @@ interface Asignacion {
       <div *ngIf="!isLoading && !error && asignacionesFiltradas.length === 0"
            class="p-8 text-center rounded-lg border-2 border-dashed"
            [ngClass]="isDarkMode ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-gray-50'">
-        <div class="text-5xl mb-3">📋</div>
+        <div class="text-5xl mb-3">ðŸ“‹</div>
         <p class="text-lg font-semibold" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
           No hay asignaciones activas
         </p>
         <p class="text-sm mt-2" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-          Aún no te han asignado emergencias
+          AÃºn no te han asignado emergencias
         </p>
       </div>
 
@@ -139,7 +162,7 @@ interface Asignacion {
                 Emergencia {{ asignacion.solicitud?.codigo_solicitud || asignacion.solicitud?.codigo }}
               </p>
               <h3 class="font-bold text-xl" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
-                {{ asignacion.solicitud?.categoria_incidente || 'Sin categoría' }}
+                {{ asignacion.solicitud?.categoria_incidente || 'Sin categorÃ­a' }}
               </h3>
               <p *ngIf="asignacion.solicitud?.descripcion" class="text-xs mt-1" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
                 {{ asignacion.solicitud?.descripcion }}
@@ -154,7 +177,7 @@ interface Asignacion {
           <!-- Client Information -->
           <div class="mb-4 p-3 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-blue-50'">
             <p class="text-xs font-semibold mb-2" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-blue-800'">
-              Información del Cliente:
+              InformaciÃ³n del Cliente:
             </p>
             <div class="grid grid-cols-2 gap-2 text-sm">
               <div>
@@ -175,7 +198,7 @@ interface Asignacion {
           <!-- Vehicle Information -->
           <div *ngIf="asignacion.solicitud?.vehiculo" class="mb-4 p-3 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-green-50'">
             <p class="text-xs font-semibold mb-2" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-green-800'">
-              Información del Vehículo:
+              InformaciÃ³n del VehÃ­culo:
             </p>
             <div class="grid grid-cols-2 gap-2 text-sm">
               <div>
@@ -214,7 +237,7 @@ interface Asignacion {
 
             <!-- Distance -->
             <div class="p-2 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
-              <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Radio búsqueda</p>
+              <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Radio bÃºsqueda</p>
               <p class="font-bold flex items-center" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
                 <span class="material-icons text-base mr-1">my_location</span>
                 {{ asignacion.solicitud?.radio_busqueda_km }} km
@@ -233,21 +256,54 @@ interface Asignacion {
           <!-- Description -->
           <div class="mb-4 p-3 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
             <p class="text-xs font-semibold mb-2" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
-              Descripción:
+              DescripciÃ³n:
             </p>
             <p class="text-sm" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-700'">
-              {{ asignacion.solicitud?.descripcion_texto || 'Sin descripción' }}
+              {{ asignacion.solicitud?.descripcion_texto || 'Sin descripciÃ³n' }}
             </p>
           </div>
-
-
+          <div class="mb-4 p-4 rounded border-2" [ngClass]="isDarkMode ? 'border-cyan-700 bg-cyan-900 bg-opacity-20' : 'border-cyan-200 bg-cyan-50'">
+            <p class="text-sm font-bold mb-2" [ngClass]="isDarkMode ? 'text-cyan-300' : 'text-cyan-800'">
+              Pagos de la atenciÃ³n
+            </p>
+            <div *ngIf="resumenPagos[asignacion.id_solicitud] as rp" class="text-sm space-y-1" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-700'">
+              <div>Estado pago: <strong>{{ rp.estado_pago }}</strong></div>
+              <div>Total exigible: <strong>{{ rp.total_exigible | number:'1.2-2' }}</strong></div>
+              <div>Total pagado: <strong>{{ rp.total_pagado | number:'1.2-2' }}</strong></div>
+              <div>Saldo pendiente: <strong>{{ rp.saldo_pendiente | number:'1.2-2' }}</strong></div>
+              <div *ngIf="rp.cargo_cancelacion > 0" class="text-xs text-orange-500">
+                Cargo de cancelaciÃ³n aplicado: {{ rp.cargo_cancelacion | number:'1.2-2' }}
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                [(ngModel)]="montoManual[asignacion.id_solicitud]"
+                placeholder="Monto manual recibido"
+                class="p-2 rounded border text-sm"
+                [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'"
+              />
+              <input
+                type="text"
+                [(ngModel)]="observacionManual[asignacion.id_solicitud]"
+                placeholder="ObservaciÃ³n (opcional)"
+                class="p-2 rounded border text-sm md:col-span-2"
+                [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'"
+              />
+            </div>
+            <button class="mt-2 px-3 py-2 rounded bg-cyan-600 hover:bg-cyan-700 text-white text-sm" (click)="registrarPagoManual(asignacion)">
+              Registrar pago manual
+            </button>
+          </div>
 
           <!-- Previously Completed Services Section -->
           <div *ngIf="serviciosRealizados[asignacion.id_asignacion] && serviciosRealizados[asignacion.id_asignacion].length > 0"
                class="mt-4 p-4 rounded border-2"
                [ngClass]="isDarkMode ? 'border-amber-600 bg-amber-900 bg-opacity-20' : 'border-amber-200 bg-amber-50'">
             <p class="text-sm font-bold mb-3" [ngClass]="isDarkMode ? 'text-amber-300' : 'text-amber-800'">
-              ✅ Servicios Ya Realizados:
+              âœ… Servicios Ya Realizados:
             </p>
 
             <div class="space-y-2">
@@ -266,12 +322,12 @@ interface Asignacion {
                 </div>
 
                 <div *ngIf="servicio.diagnostico" class="mb-2 pb-2 border-b" [ngClass]="isDarkMode ? 'border-slate-600' : 'border-gray-200'">
-                  <p class="text-xs font-medium" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Diagnóstico:</p>
+                  <p class="text-xs font-medium" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">DiagnÃ³stico:</p>
                   <p class="text-sm mt-1" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-700'">{{ servicio.diagnostico }}</p>
                 </div>
 
                 <div *ngIf="servicio.solucion_aplicada" class="mb-2 pb-2 border-b" [ngClass]="isDarkMode ? 'border-slate-600' : 'border-gray-200'">
-                  <p class="text-xs font-medium" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Solución Aplicada:</p>
+                  <p class="text-xs font-medium" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">SoluciÃ³n Aplicada:</p>
                   <p class="text-sm mt-1" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-700'">{{ servicio.solucion_aplicada }}</p>
                 </div>
 
@@ -296,7 +352,7 @@ interface Asignacion {
           <!-- Services Completed Section (only show if NOT ATENDIDA) -->
           <div *ngIf="asignacion.solicitud?.estado_actual !== 'ATENDIDA'" class="mt-4 p-4 rounded border-2" [ngClass]="isDarkMode ? 'border-green-600 bg-green-900 bg-opacity-30' : 'border-green-200 bg-green-50'">
             <p class="text-sm font-bold mb-3" [ngClass]="isDarkMode ? 'text-green-300' : 'text-green-800'">
-              Servicios Realizados (según tu catálogo):
+              Servicios Realizados (segÃºn tu catÃ¡logo):
             </p>
 
             <div *ngIf="!serviciosCargados[asignacion.id_asignacion]" class="text-center py-2">
@@ -324,7 +380,7 @@ interface Asignacion {
                 <div *ngIf="servicio.realizado" class="mt-2 pt-2 border-t" [ngClass]="isDarkMode ? 'border-slate-600' : 'border-gray-200'">
                   <p class="text-xs font-semibold mb-3" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">Registrar Resultado:</p>
 
-  <!-- Diagnóstico (Auto-filled with service name) -->
+  <!-- DiagnÃ³stico (Auto-filled with service name) -->
                   <div class="mb-2 p-2 rounded" [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
                     <label class="text-xs font-medium" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
                       Servicio
@@ -334,12 +390,12 @@ interface Asignacion {
                     </p>
                   </div>
 
-                  <!-- Solución Aplicada -->
+                  <!-- SoluciÃ³n Aplicada -->
                   <div class="mb-2">
                     <label class="text-xs font-medium" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
-                      Solución Aplicada (qué se hizo para solucionarlo)
+                      SoluciÃ³n Aplicada (quÃ© se hizo para solucionarlo)
                     </label>
-                    <textarea placeholder="Describe la solución implementada..."
+                    <textarea placeholder="Describe la soluciÃ³n implementada..."
                               [(ngModel)]="solucionResultado[asignacion.id_asignacion + '_' + j]"
                               rows="2"
                               class="w-full p-2 rounded border text-xs resize-none mt-1"
@@ -355,7 +411,7 @@ interface Asignacion {
                            [id]="'seguimiento_' + asignacion.id_asignacion + '_' + j"
                            class="w-4 h-4">
                     <label [for]="'seguimiento_' + asignacion.id_asignacion + '_' + j" class="ml-2 text-xs cursor-pointer" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
-                      ¿Requiere seguimiento posterior?
+                      Â¿Requiere seguimiento posterior?
                     </label>
                   </div>
 
@@ -386,7 +442,7 @@ interface Asignacion {
                 </button>
               </div>
 
-              <!-- Finalizar Asignación Button (only show if NOT ATENDIDA) -->
+              <!-- Finalizar AsignaciÃ³n Button (only show if NOT ATENDIDA) -->
               <button *ngIf="asignacion.solicitud?.estado_actual !== 'ATENDIDA'"
                       (click)="finalizarAsignacion(asignacion.id_asignacion)"
                       class="w-full px-4 py-2 rounded-lg font-medium transition-all duration-300 mt-3"
@@ -394,7 +450,7 @@ interface Asignacion {
                         'bg-purple-600 hover:bg-purple-700 text-white' :
                         'bg-purple-500 hover:bg-purple-600 text-white'">
                 <span class="material-icons text-base align-middle mr-1">check_circle</span>
-                Finalizar Asignación
+                Finalizar AsignaciÃ³n
               </button>
             </div>
           </div>
@@ -410,7 +466,7 @@ interface Asignacion {
             {{ tipoMensaje === 'exito' ? 'check_circle' : tipoMensaje === 'error' ? 'error' : 'info' }}
           </span>
           <h3 class="text-lg font-bold" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
-            {{ tipoMensaje === 'exito' ? 'Éxito' : tipoMensaje === 'error' ? 'Error' : 'Información' }}
+            {{ tipoMensaje === 'exito' ? 'Ã‰xito' : tipoMensaje === 'error' ? 'Error' : 'InformaciÃ³n' }}
           </h3>
         </div>
         <p class="mb-6" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
@@ -478,6 +534,11 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   observacionesResultado: { [key: string]: string } = {};
   solucionResultado: { [key: string]: string } = {};
   requiereSeguimiento: { [key: string]: boolean } = {};
+  resumenPagos: Record<string, any> = {};
+  montoManual: Record<string, number> = {};
+  observacionManual: Record<string, string> = {};
+  politicaCancelacionMonto = 0;
+  politicaCancelacionActiva = false;
 
   // Modal properties
   mostrarModal = false;
@@ -488,6 +549,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
 
   constructor(
     private asignacionesService: AsignacionesService,
+    private pagosService: PagosService,
     private themeService: ThemeService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -501,6 +563,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
       });
 
     this.cargarAsignaciones();
+    this.cargarPoliticaCancelacion();
   }
 
   ngOnDestroy(): void {
@@ -517,10 +580,10 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
 
     this.asignacionesService.obtenerAsignacionesActivas().subscribe({
       next: (data: any) => {
-        // Seguir patrón de Postulaciones: data viene directo o en data.data
+        // Seguir patrÃ³n de Postulaciones: data viene directo o en data.data
         this.asignaciones = Array.isArray(data) ? data : (data?.data || []);
 
-        console.log('✅ Asignaciones cargadas:', this.asignaciones);
+        console.log('âœ… Asignaciones cargadas:', this.asignaciones);
 
         if (!this.asignaciones || this.asignaciones.length === 0) {
           this.isLoading = false;
@@ -529,10 +592,11 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // Cargar servicios automáticamente para cada asignación
+        // Cargar servicios automÃ¡ticamente para cada asignaciÃ³n
         this.asignaciones.forEach((asignacion) => {
           this.cargarServiciosTaller(asignacion.id_asignacion);
           this.cargarServiciosRealizados(asignacion.id_asignacion);
+          if (asignacion.id_solicitud) this.cargarResumenPago(asignacion.id_solicitud);
         });
 
         this.aplicarFiltro();
@@ -542,15 +606,15 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.error = 'Error al cargar asignaciones. Intenta de nuevo.';
         this.isLoading = false;
-        console.error('❌ Error en cargarAsignaciones:', err);
+        console.error('âŒ Error en cargarAsignaciones:', err);
         this.cdr.markForCheck();
       }
     });
   }
 
   cargarDatosSolicitud(index: number): void {
-    // Ya no es necesario - toda la información viene del endpoint /activas
-    // Este método se mantiene por compatibilidad, pero no se usa
+    // Ya no es necesario - toda la informaciÃ³n viene del endpoint /activas
+    // Este mÃ©todo se mantiene por compatibilidad, pero no se usa
   }
 
   cargarServiciosTaller(asignacionId: string): void {
@@ -571,7 +635,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        console.warn(`Servicios no disponibles para asignación ${asignacionId}:`, err);
+        console.warn(`Servicios no disponibles para asignaciÃ³n ${asignacionId}:`, err);
         this.serviciosPorAsignacion[asignacionId] = [];
         this.serviciosCargados[asignacionId] = true;
       }
@@ -583,11 +647,11 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     this.asignacionesService.obtenerServiciosRealizados(asignacionId).subscribe({
       next: (servicios: any[]) => {
         this.serviciosRealizados[asignacionId] = servicios || [];
-        console.log(`✅ Servicios realizados cargados para asignación ${asignacionId}:`, servicios);
+        console.log(`âœ… Servicios realizados cargados para asignaciÃ³n ${asignacionId}:`, servicios);
         this.cdr.markForCheck();
       },
       error: (err) => {
-        console.warn(`No hay servicios realizados para asignación ${asignacionId}:`, err);
+        console.warn(`No hay servicios realizados para asignaciÃ³n ${asignacionId}:`, err);
         this.serviciosRealizados[asignacionId] = [];
       }
     });
@@ -651,6 +715,75 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
     return (this.serviciosPorAsignacion[asignacionId] || []).some(s => s.realizado);
   }
 
+  cargarResumenPago(idSolicitud: string): void {
+    this.pagosService.obtenerResumen(idSolicitud).subscribe({
+      next: (res) => {
+        this.resumenPagos[idSolicitud] = res;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.resumenPagos[idSolicitud] = null;
+      },
+    });
+  }
+
+  cargarPoliticaCancelacion(): void {
+    this.pagosService.getPoliticaCancelacion().subscribe({
+      next: (res) => {
+        this.politicaCancelacionMonto = Number(res?.monto_penalidad || 0);
+        this.politicaCancelacionActiva = !!res?.activa;
+        this.cdr.markForCheck();
+      },
+      error: () => {},
+    });
+  }
+
+  guardarPoliticaCancelacion(): void {
+    this.pagosService
+      .upsertPoliticaCancelacion(
+        Number(this.politicaCancelacionMonto || 0),
+        !!this.politicaCancelacionActiva,
+      )
+      .subscribe({
+        next: () => {
+          this.mensajeModal = 'Política de cancelación guardada';
+          this.tipoMensaje = 'exito';
+          this.mostrarModal = true;
+        },
+        error: (err) => {
+          this.mensajeModal = err?.error?.detail || 'No se pudo guardar política de cancelación';
+          this.tipoMensaje = 'error';
+          this.mostrarModal = true;
+        },
+      });
+  }
+
+  registrarPagoManual(asignacion: Asignacion): void {
+    const idSolicitud = asignacion.id_solicitud;
+    const monto = Number(this.montoManual[idSolicitud] || 0);
+    if (!idSolicitud || monto <= 0) {
+      this.mensajeModal = 'Monto invÃ¡lido para registrar pago manual';
+      this.tipoMensaje = 'error';
+      this.mostrarModal = true;
+      return;
+    }
+    this.pagosService.registrarManual(idSolicitud, monto, this.observacionManual[idSolicitud]).subscribe({
+      next: () => {
+        this.mensajeModal = 'Pago manual registrado correctamente';
+        this.tipoMensaje = 'exito';
+        this.mostrarModal = true;
+        this.montoManual[idSolicitud] = 0;
+        this.observacionManual[idSolicitud] = '';
+        this.cargarResumenPago(idSolicitud);
+      },
+      error: (err) => {
+        this.mensajeModal = err?.error?.detail || 'No se pudo registrar pago manual';
+        this.tipoMensaje = 'error';
+        this.mostrarModal = true;
+      },
+    });
+  }
+
   finalizarAsignacion(asignacionId: string | number): void {
     const asignacion = this.asignaciones.find(a => a.id_asignacion === String(asignacionId));
 
@@ -664,19 +797,19 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
         if (asignacion?.solicitud) {
           asignacion.solicitud.estado_actual = 'ATENDIDA';
         }
-        this.mensajeModal = '✓ Asignación finalizada exitosamente';
+        this.mensajeModal = 'âœ“ AsignaciÃ³n finalizada exitosamente';
         this.tipoMensaje = 'exito';
         this.mostrarModal = true;
 
-        // Recargar asignaciones después de 2 segundos
+        // Recargar asignaciones despuÃ©s de 2 segundos
         setTimeout(() => {
           this.cargarAsignaciones();
         }, 2000);
         this.cdr.markForCheck();
       },
       error: (err) => {
-        console.error('Error finalizando asignación:', err);
-        this.mensajeModal = 'Error al finalizar la asignación';
+        console.error('Error finalizando asignaciÃ³n:', err);
+        this.mensajeModal = 'Error al finalizar la asignaciÃ³n';
         this.tipoMensaje = 'error';
         this.mostrarModal = true;
       }
@@ -688,11 +821,11 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   }
 
   filterByState(estado: string): void {
-    // Método removido: las asignaciones se filtran automáticamente
+    // MÃ©todo removido: las asignaciones se filtran automÃ¡ticamente
   }
 
   aplicarFiltro(): void {
-    // Filtrar automáticamente: mostrar solo asignaciones que NO sean ATENDIDA
+    // Filtrar automÃ¡ticamente: mostrar solo asignaciones que NO sean ATENDIDA
     // Las ATENDIDA aparecen en "Resultado del Servicio"
     this.asignacionesFiltradas = this.asignaciones.filter(
       a => a.solicitud?.estado_actual !== 'ATENDIDA'
@@ -712,7 +845,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
 
   actualizarEstado(asignacionId: string | number | undefined, index: number): void {
     if (!asignacionId) {
-      this.error = 'ID de asignación inválido';
+      this.error = 'ID de asignaciÃ³n invÃ¡lido';
       return;
     }
 
@@ -770,7 +903,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
           asignacion.solicitud.estado_actual = nuevoEstado;
         }
 
-        // Si llegó a ATENDIDA, cargar servicios
+        // Si llegÃ³ a ATENDIDA, cargar servicios
         if (nuevoEstado === 'ATENDIDA') {
           this.cargarServiciosTaller(asignacion.id_asignacion);
           this.cargarServiciosRealizados(asignacion.id_asignacion);
@@ -801,7 +934,7 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
   formatearEstado(estado: string): string {
     const estados: { [key: string]: string } = {
       'REGISTRADA': 'Registrada',
-      'EN_BUSQUEDA': 'En Búsqueda',
+      'EN_BUSQUEDA': 'En BÃºsqueda',
       'EN_ESPERA_RESPUESTAS': 'En Espera de Respuestas',
       'TALLER_SELECCIONADO': 'Taller Seleccionado',
       'EN_CAMINO': 'En Camino',
@@ -865,14 +998,15 @@ export class AssignmentsComponent implements OnInit, OnDestroy {
 
   getCategoriaNombre(categoria?: string): string {
     const categorias: { [key: string]: string } = {
-      'MECANICO': 'Problema Mecánico',
-      'ELECTRICO': 'Problema Eléctrico',
-      'ESTRUCTURAL': 'Daño Estructural',
+      'MECANICO': 'Problema MecÃ¡nico',
+      'ELECTRICO': 'Problema ElÃ©ctrico',
+      'ESTRUCTURAL': 'DaÃ±o Estructural',
       'OTRO': 'Otro'
     };
-    return categorias[categoria || ''] || categoria || 'Sin categoría';
+    return categorias[categoria || ''] || categoria || 'Sin categorÃ­a';
   }
 }
+
 
 
 

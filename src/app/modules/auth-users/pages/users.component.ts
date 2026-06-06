@@ -185,6 +185,7 @@ import { takeUntil } from 'rxjs/operators';
                       [ngClass]="{
                         'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300': usuario.rol === RolUsuario.CLIENTE,
                         'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300': usuario.rol === RolUsuario.TALLER,
+                        'bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300': usuario.rol === RolUsuario.TRABAJADOR,
                         'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300': usuario.rol === RolUsuario.ADMINISTRADOR
                       }"
                       class="px-3 py-1 rounded-full text-xs font-bold"
@@ -246,6 +247,7 @@ import { takeUntil } from 'rxjs/operators';
                   [ngClass]="{
                     'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300': usuario.rol === RolUsuario.CLIENTE,
                     'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300': usuario.rol === RolUsuario.TALLER,
+                    'bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300': usuario.rol === RolUsuario.TRABAJADOR,
                     'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300': usuario.rol === RolUsuario.ADMINISTRADOR
                   }"
                   class="px-2 py-1 rounded-full text-xs font-bold"

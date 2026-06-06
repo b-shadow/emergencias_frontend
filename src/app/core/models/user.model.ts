@@ -1,6 +1,7 @@
 export enum RolUsuario {
   CLIENTE = 'CLIENTE',
   TALLER = 'TALLER',
+  TRABAJADOR = 'TRABAJADOR',
   ADMINISTRADOR = 'ADMINISTRADOR'
 }
 
@@ -67,4 +68,59 @@ export interface TallerRegisterResponse {
   correo: string;
   estado: string;
   nota: string;
+}
+
+export interface SubscriptionPlan {
+  id_plan: string;
+  codigo_plan: string;
+  nombre_plan: string;
+  descripcion?: string | null;
+  precio_bs: number;
+  duracion_dias: number;
+  precio_mensual_usd: number;
+  stripe_price_id?: string | null;
+}
+
+export interface TallerRegisterCheckoutRequest extends TallerRegisterRequest {
+  id_plan: string;
+  frontend_base_url?: string | null;
+}
+
+export interface TallerRegisterCheckoutResponse {
+  checkout_url: string;
+  checkout_token: string;
+  estado: string;
+}
+
+export interface TallerRegisterCheckoutValidationResponse {
+  estado: string;
+  mensaje: string;
+  correo?: string | null;
+}
+
+export interface SubscriptionHistoryItem {
+  id_subscription: string;
+  id_plan: string;
+  nombre_plan: string;
+  codigo_plan: string;
+  estado: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  fecha_creacion: string;
+}
+
+export interface SubscriptionManagementResponse {
+  id_taller: string;
+  plan_actual?: string | null;
+  codigo_plan_actual?: string | null;
+  estado_suscripcion?: string | null;
+  fecha_inicio?: string | null;
+  fecha_fin?: string | null;
+  dias_restantes?: number | null;
+  historial: SubscriptionHistoryItem[];
+}
+
+export interface SubscriptionRenewCheckoutRequest {
+  id_plan: string;
+  frontend_base_url?: string | null;
 }

@@ -6,6 +6,7 @@ import {
   assignmentAttentionRoutes,
   authPublicRoutes,
   authUsersProtectedRoutes,
+  gestionServiciosCotizacionesOrdenesPagosRoutes,
   notificationsAdminReportsRoutes,
   vehiclesEmergenciesRoutes,
 } from './modules';
@@ -26,6 +27,7 @@ export const routes: Routes = [
       ...assignmentAttentionRoutes,
       ...aiAutomationRoutes,
       ...notificationsAdminReportsRoutes,
+      ...gestionServiciosCotizacionesOrdenesPagosRoutes,
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

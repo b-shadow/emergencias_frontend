@@ -1,9 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SolicitudesDisponiblesService } from '@modules/assignment-attention/services/solicitudes-disponibles.service';
 import { PostulacionesService } from '@modules/assignment-attention/services/postulaciones.service';
+import { WorkshopService } from '@core/services/workshop.service';
+import { TallerServicio } from '@core/models/especialidad-servicio.model';
 import { ThemeService } from '@core/services/theme.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -32,6 +35,7 @@ interface Solicitud {
   estado_actual?: string;
   fecha_creacion?: string;
   evidencias?: Evidencia[];
+  distancia_km?: number;
 }
 
 interface Vehiculo {
@@ -301,8 +305,9 @@ interface Evidencia {
             </label>
             <input type="number"
                    [(ngModel)]="tiempoEstimado"
+                   (ngModelChange)="etaEditadoManualmente = true"
                    min="1"
-                   max="480"
+                   max="180"
                    placeholder="Ej: 15"
                    class="w-full p-2 rounded border text-sm"
                    [ngClass]="isDarkMode ?
@@ -311,6 +316,68 @@ interface Evidencia {
             <p class="text-xs mt-1" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
               Indica cuánto tiempo aproximadamente tardará tu equipo en llegar al lugar
             </p>
+          </div>
+
+          <p class="text-xs mt-1" [ngClass]="isDarkMode ? 'text-cyan-300' : 'text-cyan-700'">
+            ETA sugerido por distancia: {{ etaSugeridoMin }} min ({{ distanciaBaseKm | number:'1.1-1' }} km)
+          </p>
+
+          <div class="mt-4 mb-3 p-3 rounded border" [ngClass]="isDarkMode ? 'border-slate-500 bg-slate-700' : 'border-purple-200 bg-white'">
+            <p class="text-sm font-semibold mb-2" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-800'">Seleccionado</p>
+            <div *ngIf="serviciosCotizacion.length > 0; else sinSeleccion" class="space-y-2">
+              <div *ngFor="let item of serviciosCotizacion" class="flex items-center justify-between gap-3 text-sm">
+                <span class="truncate" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-800'">{{ item.nombre_servicio }}</span>
+                <span class="font-semibold" [ngClass]="isDarkMode ? 'text-cyan-300' : 'text-purple-700'">
+                  {{ item.precio_servicio | number:'1.2-2' }} Bs
+                </span>
+              </div>
+              <div class="pt-2 border-t flex items-center justify-between text-sm font-bold" [ngClass]="isDarkMode ? 'border-slate-500 text-white' : 'border-gray-200 text-gray-900'">
+                <span>Total</span>
+                <span>{{ (getSubtotalCotizacionLocal() + costoIdaCotizacion) | number:'1.2-2' }} Bs</span>
+              </div>
+            </div>
+            <ng-template #sinSeleccion>
+              <p class="text-xs" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
+                Todavía no has seleccionado servicios.
+              </p>
+            </ng-template>
+          </div>
+
+          <div class="mb-4 p-3 rounded border" [ngClass]="isDarkMode ? 'border-slate-500 bg-slate-700' : 'border-gray-300 bg-white'">
+            <p class="text-sm font-semibold mb-2" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-800'">Servicios a cotizar *</p>
+            <p class="text-xs mb-3" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
+              Selecciona uno o varios servicios de tu taller para generar la cotizacion.
+            </p>
+            <div class="space-y-2 max-h-56 overflow-auto pr-1" *ngIf="misServicios.length > 0; else sinServiciosTaller">
+              <label *ngFor="let srv of misServicios" class="flex items-center justify-between gap-3 p-2 rounded border cursor-pointer"
+                [ngClass]="isDarkMode ? 'border-slate-500 bg-slate-600' : 'border-gray-200 bg-gray-50'">
+                <div class="flex items-center gap-2 min-w-0">
+                  <input type="checkbox"
+                    [checked]="hasServicioSeleccionado(srv.id_taller_servicio)"
+                    (change)="onServicioCotizacionChange(srv, $any($event.target).checked)"
+                    class="w-4 h-4">
+                  <span class="text-sm truncate" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-800'">{{ srv.nombre_servicio }}</span>
+                </div>
+                <input type="number"
+                  min="0"
+                  step="0.01"
+                  [disabled]="!hasServicioSeleccionado(srv.id_taller_servicio)"
+                  [ngModel]="getPrecioServicioSeleccionado(srv.id_taller_servicio)"
+                  (ngModelChange)="setPrecioServicioSeleccionado(srv.id_taller_servicio, $event)"
+                  class="w-28 p-1 rounded border text-sm text-right"
+                  [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'">
+              </label>
+            </div>
+            <ng-template #sinServiciosTaller>
+              <p class="text-xs" [ngClass]="isDarkMode ? 'text-amber-300' : 'text-amber-700'">
+                No tienes servicios activos en tu taller. Registra servicios primero.
+              </p>
+            </ng-template>
+            <div class="mt-3 text-sm" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-gray-800'">
+              Subtotal: <strong>{{ getSubtotalCotizacionLocal() | number:'1.2-2' }} Bs</strong> |
+              Ida: <strong>{{ costoIdaCotizacion | number:'1.2-2' }} Bs</strong> |
+              Total: <strong>{{ (getSubtotalCotizacionLocal() + costoIdaCotizacion) | number:'1.2-2' }} Bs</strong>
+            </div>
           </div>
 
           <!-- Message Proposal -->
@@ -347,9 +414,9 @@ interface Evidencia {
           <!-- Action Buttons -->
           <div class="flex gap-3">
             <button (click)="postularme()"
-                    [disabled]="!tiempoEstimado || !disponibilidadConfirmada || enviando"
+                    [disabled]="!tiempoEstimado || !disponibilidadConfirmada || enviando || !serviciosCotizacion.length"
                     class="flex-1 px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
-                    [ngClass]="!tiempoEstimado || !disponibilidadConfirmada || enviando ?
+                    [ngClass]="!tiempoEstimado || !disponibilidadConfirmada || enviando || !serviciosCotizacion.length ?
                       (isDarkMode ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : 'bg-gray-300 text-gray-600 cursor-not-allowed') :
                       (isDarkMode ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white')">
               <span class="material-icons text-base" *ngIf="!enviando">send</span>
@@ -456,6 +523,19 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
   enviando = false;
   exitoPostulacion = false;
   errorPostulacion: string | null = null;
+  misServicios: TallerServicio[] = [];
+  serviciosCotizacion: {
+    id_taller_servicio: string;
+    precio_servicio: number;
+    nombre_servicio?: string | null;
+    categoria_tarifa?: string | null;
+    incluido_en_solicitud?: boolean;
+  }[] = [];
+  costoIdaCotizacion = 0;
+  etaSugeridoMin = 15;
+  distanciaBaseKm = 0;
+  private tallerUbicacion: { lat: number; lng: number } | null = null;
+  etaEditadoManualmente = false;
 
   // Mapa
   map: any = null;
@@ -469,8 +549,10 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private http: HttpClient,
     private solicitudesService: SolicitudesDisponiblesService,
     private postulacionesService: PostulacionesService,
+    private workshopService: WorkshopService,
     private themeService: ThemeService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -487,6 +569,8 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
     if (id) {
       this.cargarDetalles(id);
     }
+    this.cargarUbicacionTaller();
+    this.cargarMisServicios();
   }
 
   ngAfterViewInit(): void {
@@ -544,6 +628,11 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
         this.evidenciasImagen = (this.solicitud.evidencias || []).filter(
           (e: Evidencia) => (e.tipo_evidencia || '').toUpperCase() === 'IMAGEN' && !!e.url_archivo
         );
+        this.calcularEtaSugerido(datosRaw);
+        if (!this.etaEditadoManualmente) {
+          this.tiempoEstimado = this.etaSugeridoMin;
+        }
+        this.recalcularEtaConRutaOSRM();
         this.isLoading = false;
         this.cdr.markForCheck();
         // Inicializar mapa después de que los datos se hayan asignado
@@ -565,6 +654,10 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
       this.errorPostulacion = 'Por favor completa todos los campos requeridos';
       return;
     }
+    if (!this.serviciosCotizacion.length) {
+      this.errorPostulacion = 'Debes seleccionar al menos un servicio para enviar cotizacion';
+      return;
+    }
 
     this.enviando = true;
     this.errorPostulacion = null;
@@ -574,19 +667,159 @@ export class SolicitudDetalleComponent implements OnInit, OnDestroy, AfterViewIn
       disponibilidad: this.disponibilidadConfirmada,
       mensaje_propuesta: this.mensajePropuesta.trim() || undefined
     }).subscribe({
-      next: () => {
-        this.exitoPostulacion = true;
-        this.enviando = false;
-        setTimeout(() => {
-          this.router.navigate(['/applications']);
-        }, 2000);
-        this.cdr.markForCheck();
+      next: (resp: any) => {
+        const idPostulacion = resp?.id_postulacion || resp?.data?.id_postulacion;
+        if (!idPostulacion) {
+          this.errorPostulacion = 'Postulacion creada, pero no se pudo obtener su ID para generar cotizacion';
+          this.enviando = false;
+          this.cdr.markForCheck();
+          return;
+        }
+        this.postulacionesService.crearOActualizarCotizacion(idPostulacion, {
+          servicios: this.serviciosCotizacion.map((s) => ({
+            id_taller_servicio: s.id_taller_servicio,
+            precio_servicio: Number(s.precio_servicio || 0),
+            nombre_servicio: s.nombre_servicio || null,
+            categoria_tarifa: s.categoria_tarifa || null,
+            incluido_en_solicitud: s.incluido_en_solicitud !== false
+          })),
+          costo_ida: Number(this.costoIdaCotizacion || 0),
+          detalle: this.mensajePropuesta.trim() || null
+        }).subscribe({
+          next: () => {
+            this.exitoPostulacion = true;
+            this.enviando = false;
+            setTimeout(() => {
+              this.router.navigate(['/applications']);
+            }, 1800);
+            this.cdr.markForCheck();
+          },
+          error: (errCot) => {
+            this.errorPostulacion = errCot?.error?.detail || 'Se creo la postulacion, pero fallo la cotizacion';
+            this.enviando = false;
+            this.cdr.markForCheck();
+          }
+        });
       },
       error: (err) => {
         this.errorPostulacion = err?.error?.detail || 'Error al enviar postulación';
         this.enviando = false;
         console.error(err);
         this.cdr.markForCheck();
+      }
+    });
+  }
+
+  cargarMisServicios(): void {
+    this.workshopService.getMisServicios().subscribe({
+      next: (rows) => {
+        this.misServicios = (rows || []).filter((s) => s.disponible !== false && (s.estado || '').toUpperCase() === 'ACTIVO');
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.misServicios = [];
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  cargarUbicacionTaller(): void {
+    this.workshopService.getMyProfile().subscribe({
+      next: (perfil) => {
+        if (typeof perfil?.latitud === 'number' && typeof perfil?.longitud === 'number') {
+          this.tallerUbicacion = { lat: perfil.latitud, lng: perfil.longitud };
+          this.recalcularEtaConRutaOSRM();
+        }
+      },
+      error: () => {
+        this.tallerUbicacion = null;
+      }
+    });
+  }
+
+  onServicioCotizacionChange(servicio: TallerServicio, checked: boolean): void {
+    const existingIndex = this.serviciosCotizacion.findIndex((s) => s.id_taller_servicio === servicio.id_taller_servicio);
+    if (!checked) {
+      if (existingIndex >= 0) this.serviciosCotizacion.splice(existingIndex, 1);
+      return;
+    }
+    if (existingIndex >= 0) return;
+    this.serviciosCotizacion.push({
+      id_taller_servicio: servicio.id_taller_servicio,
+      precio_servicio: Number(servicio.precio_base || 0),
+      nombre_servicio: servicio.nombre_servicio || '',
+      categoria_tarifa: servicio.categoria_tarifa || '',
+      incluido_en_solicitud: this.esServicioSolicitado(servicio.nombre_servicio || '')
+    });
+    if (this.costoIdaCotizacion <= 0 && typeof servicio.precio_ida_minimo === 'number') {
+      this.costoIdaCotizacion = Number(servicio.precio_ida_minimo);
+    }
+  }
+
+  hasServicioSeleccionado(idTallerServicio: string): boolean {
+    return this.serviciosCotizacion.some((s) => s.id_taller_servicio === idTallerServicio);
+  }
+
+  getPrecioServicioSeleccionado(idTallerServicio: string): number {
+    return Number(this.serviciosCotizacion.find((s) => s.id_taller_servicio === idTallerServicio)?.precio_servicio || 0);
+  }
+
+  setPrecioServicioSeleccionado(idTallerServicio: string, precio: number): void {
+    const item = this.serviciosCotizacion.find((s) => s.id_taller_servicio === idTallerServicio);
+    if (!item) return;
+    const parsed = Number(precio);
+    item.precio_servicio = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  }
+
+  getSubtotalCotizacionLocal(): number {
+    return this.serviciosCotizacion.reduce((acc, s) => acc + Number(s.precio_servicio || 0), 0);
+  }
+
+  private esServicioSolicitado(nombreServicio: string): boolean {
+    const solicitados = (this.solicitud?.servicios_requeridos || []).map((s) => String(s || '').trim().toLowerCase());
+    return solicitados.includes(String(nombreServicio || '').trim().toLowerCase());
+  }
+
+  private calcularEtaSugerido(datosRaw: any): void {
+    const distancia = Number(
+      datosRaw?.distancia_km ??
+      datosRaw?.distancia_estimada_km ??
+      datosRaw?.radio_busqueda_km ??
+      0
+    );
+    this.distanciaBaseKm = Number.isFinite(distancia) && distancia > 0 ? distancia : 0;
+    const etaCalc = Math.round((this.distanciaBaseKm / 30) * 60 + 5);
+    this.etaSugeridoMin = Math.max(5, Math.min(180, etaCalc || 15));
+  }
+
+  private recalcularEtaConRutaOSRM(): void {
+    if (!this.solicitud || !this.tallerUbicacion) return;
+    const origenLat = this.tallerUbicacion.lat;
+    const origenLng = this.tallerUbicacion.lng;
+    const destinoLat = this.solicitud.ubicacion.lat;
+    const destinoLng = this.solicitud.ubicacion.long;
+    if (![origenLat, origenLng, destinoLat, destinoLng].every((v) => Number.isFinite(v))) return;
+
+    const url = `https://router.project-osrm.org/route/v1/driving/${origenLng},${origenLat};${destinoLng},${destinoLat}?overview=false&alternatives=false&steps=false`;
+    this.http.get<any>(url).subscribe({
+      next: (resp) => {
+        const route = resp?.routes?.[0];
+        const distanceMeters = Number(route?.distance || 0);
+        const durationSec = Number(route?.duration || 0);
+        if (distanceMeters > 0) {
+          this.distanciaBaseKm = distanceMeters / 1000;
+        }
+        if (durationSec > 0) {
+          const eta = Math.max(5, Math.min(180, Math.round(durationSec / 60)));
+          this.etaSugeridoMin = eta;
+          if (!this.etaEditadoManualmente) {
+            this.tiempoEstimado = eta;
+          }
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        // fallback: se mantiene ETA sugerido por distancia base local
       }
     });
   }

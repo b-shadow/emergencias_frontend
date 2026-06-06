@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
-import { TallerPerfil, TallerPerfilUpdate } from '@core/models/workshop.model';
+import { TallerPerfil, TallerPerfilUpdate, TenantTallerContext } from '@core/models/workshop.model';
 export {
   Especialidad,
   TallerEspecialidad,
@@ -28,6 +28,7 @@ import {
 
 export interface TallerAdminListItem {
   id_taller: string;
+  id_tenant: string;
   id_usuario: string;
   nombre_taller: string;
   razon_social: string | null;
@@ -39,6 +40,9 @@ export interface TallerAdminListItem {
   es_activo: boolean;
   fecha_registro: string;
   fecha_aprobacion: string | null;
+  plan_actual?: string | null;
+  fecha_fin_plan?: string | null;
+  dias_restantes_plan?: number | null;
 }
 
 export interface TallerAdminDetail extends TallerAdminListItem {
@@ -67,6 +71,13 @@ export interface TallerActionResponse {
   es_activo: boolean;
 }
 
+export interface SubscriptionAdminActionResponse {
+  mensaje: string;
+  id_taller: string;
+  estado_suscripcion: string | null;
+  estado_operativo_taller: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -80,6 +91,10 @@ export class WorkshopService {
    */
   getMyProfile(): Observable<TallerPerfil> {
     return this.http.get<TallerPerfil>(`${this.apiUrl}/talleres/me`);
+  }
+
+  getMyTenantContext(): Observable<TenantTallerContext> {
+    return this.http.get<TenantTallerContext>(`${this.apiUrl}/talleres/me/tenant`);
   }
 
   /**
@@ -166,6 +181,20 @@ export class WorkshopService {
    */
   deshabilitarTaller(tallerId: string): Observable<TallerActionResponse> {
     return this.http.post<TallerActionResponse>(`${this.apiUrl}/talleres/${tallerId}/deshabilitar`, {});
+  }
+
+  /**
+   * Suspende la suscripción SaaS de un taller (admin)
+   */
+  suspenderSuscripcionTaller(tallerId: string): Observable<SubscriptionAdminActionResponse> {
+    return this.http.post<SubscriptionAdminActionResponse>(`${this.apiUrl}/auth/subscriptions/${tallerId}/suspend`, {});
+  }
+
+  /**
+   * Habilita nuevamente la suscripción SaaS de un taller (admin)
+   */
+  habilitarSuscripcionTaller(tallerId: string): Observable<SubscriptionAdminActionResponse> {
+    return this.http.post<SubscriptionAdminActionResponse>(`${this.apiUrl}/auth/subscriptions/${tallerId}/enable`, {});
   }
 
   // =========================================================================

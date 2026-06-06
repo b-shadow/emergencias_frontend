@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { RolUsuario } from '@core/models/user.model';
+import { WorkshopService } from '@core/services/workshop.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -20,6 +21,9 @@ import { RolUsuario } from '@core/models/user.model';
               </h1>
               <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
                 Bienvenido, <span class="font-bold text-slate-900 dark:text-white">{{ userName }}</span>
+              </p>
+              <p *ngIf="tenantLabel && isTaller" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Tenant Taller: <span class="font-semibold">{{ tenantLabel }}</span>
               </p>
             </div>
             <span class="px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-sky-100 to-cyan-100 dark:from-sky-900/30 dark:to-cyan-900/30 text-sky-800 dark:text-cyan-300 border border-sky-300 dark:border-sky-700">
@@ -250,8 +254,12 @@ export class DashboardComponent implements OnInit {
   userName: string = '';
   userRole: string = '';
   isTaller: boolean = false;
+  tenantLabel = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private workshopService: WorkshopService
+  ) {}
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
@@ -259,6 +267,13 @@ export class DashboardComponent implements OnInit {
       this.userName = user.nombre_completo;
       this.userRole = user.rol;
       this.isTaller = user.rol === RolUsuario.TALLER;
+      if (this.isTaller) {
+        this.workshopService.getMyTenantContext().subscribe({
+          next: (ctx) => {
+            this.tenantLabel = ctx?.slug_tenant || ctx?.nombre_tenant || '';
+          },
+        });
+      }
     }
   }
 }

@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '@environments/environment';
+import { OfflineCacheService } from '@core/services/offline-cache.service';
 
 export interface EstadisticaProblema {
   categoria: string;
@@ -20,6 +22,24 @@ export interface EstadisticaTiempoAtencion {
   tiempo_maximo_minutos: number;
 }
 
+export interface KPIIncidenteTipo {
+  tipo: string;
+  cantidad: number;
+}
+
+export interface KPICancelacionTipo {
+  motivo: string;
+  cantidad: number;
+}
+
+export interface KPIEficienciaServicio {
+  servicio: string;
+  categoria_tarifa: string;
+  total: number;
+  completados: number;
+  tasa_completacion: number;
+}
+
 export interface EstadisticaGeneralTaller {
   fecha_inicio: string;
   fecha_fin: string;
@@ -32,6 +52,12 @@ export interface EstadisticaGeneralTaller {
   dias_mayor_demanda: EstadisticaDemacruzada[];
   horas_mayor_demanda: EstadisticaDemacruzada[];
   tiempo_promedio_atencion: EstadisticaTiempoAtencion;
+  tiempo_promedio_asignacion_minutos: number;
+  tiempo_promedio_llegada_minutos: number;
+  incidentes_por_tipo: KPIIncidenteTipo[];
+  zona_mas_incidentes?: string | null;
+  cancelaciones_por_tipo: KPICancelacionTipo[];
+  eficiencia_por_servicio: KPIEficienciaServicio[];
 }
 
 export interface FiltroReporteTallerAplicado {
@@ -90,8 +116,12 @@ export interface EstadisticasTallerResponse {
 })
 export class EstadisticasTallerService {
   private apiUrl = `${environment.apiUrl}/estadisticas-taller`;
+  private cacheKey = 'offline_estadisticas_taller_mis_estadisticas';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private cache: OfflineCacheService,
+  ) {}
 
   /**
    * Obtiene las estadísticas del taller autenticado
@@ -136,6 +166,20 @@ export class EstadisticasTallerService {
     return this.http.get<EstadisticasTallerResponse>(
       `${this.apiUrl}/mis-estadisticas`,
       { params }
+    ).pipe(
+      tap((data) => this.cache.set(this.cacheKey, data)),
+      catchError(() => {
+        const cached = this.cache.get<EstadisticasTallerResponse>(this.cacheKey);
+        return of(
+          cached || {
+            id_taller: '',
+            nombre_taller: '',
+            estadisticas: null,
+            reporte: null,
+            mensaje_vacio: 'Sin conexion y sin cache disponible',
+          }
+        );
+      }),
     );
   }
 }

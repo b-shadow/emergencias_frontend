@@ -4,7 +4,8 @@ import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, Messaging, isSupported } from 'firebase/messaging';
 import { firebaseConfig } from '@environments/firebase.config';
 import { environment } from '@environments/environment';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 export interface NotificationPayload {
   notification?: {
@@ -24,6 +25,10 @@ export class FirebaseService {
   private swRegistration: ServiceWorkerRegistration | null = null;
   private notificationSubject = new BehaviorSubject<NotificationPayload | null>(null);
   private tokenSubject = new BehaviorSubject<string | null>(localStorage.getItem('fcm_token'));
+  private permissionMessageSubject = new BehaviorSubject<string | null>(null);
+  private notificationsPermission: NotificationPermission = (typeof Notification !== 'undefined')
+    ? Notification.permission
+    : 'default';
 
   // VAPID Key para Firebase Cloud Messaging
   private readonly VAPID_KEY = 'BOl4UrmI1rRULH5pxE49-0eLYgNq-CIAygp0-bVBqPPiJxqgEKIO3tePWwx2rq_uGKxUf5wvK79TcPtS6P0kZTw';
@@ -35,9 +40,7 @@ export class FirebaseService {
    * Inicializa Firebase y solicita permisos de notificación
    */
   async initializeFirebase(): Promise<void> {
-    if (this.initialized) {
-      return;
-    }
+    if (this.initialized) return;
 
     try {
       // Verificar si el navegador soporta FCM
@@ -82,6 +85,20 @@ export class FirebaseService {
   }
 
   /**
+   * Solicita permiso/token si corresponde (para invocar en login).
+   * - default: abre prompt de permiso
+   * - granted: asegura token
+   * - denied: no fuerza prompt (navegador lo bloquea), solo informa estado
+   */
+  async ensurePermissionAndToken(): Promise<void> {
+    if (!this.initialized) {
+      await this.initializeFirebase();
+      return;
+    }
+    await this.requestTokenAndRegister();
+  }
+
+  /**
    * Solicita permiso y obtiene el token FCM
    */
   private async requestTokenAndRegister(): Promise<void> {
@@ -91,8 +108,12 @@ export class FirebaseService {
     }
 
     try {
-      const permission = await Notification.requestPermission();
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
 
+      this.notificationsPermission = permission;
       if (permission === 'granted') {
         console.log('✅ Permiso de notificación concedido');
 
@@ -109,15 +130,27 @@ export class FirebaseService {
         const token = await getToken(this.messaging, tokenOptions);
 
         if (token) {
-          console.log('✅ Token FCM obtenido');
+          console.log(`✅ Token FCM capturado: ${token.substring(0, 24)}...`);
           localStorage.setItem('fcm_token', token);
           this.tokenSubject.next(token);
+          this.permissionMessageSubject.next(null);
         }
       } else if (permission === 'denied') {
-        console.warn('⚠️ Permiso de notificación denegado por el usuario');
+        localStorage.removeItem('fcm_token');
+        this.tokenSubject.next(null);
+        const msg = 'Notificaciones bloqueadas en el navegador. Habilítalas en configuración del sitio y recarga la página.';
+        console.warn(`⚠️ ${msg}`);
+        this.permissionMessageSubject.next(msg);
       }
     } catch (err: any) {
-      console.warn('⚠️ Error solicitando permiso de notificación:', err);
+      const errMsg = String(err?.message || err || '');
+      if (errMsg.includes('API key not valid')) {
+        const msg = 'Configuración Firebase inválida (API key). Actualiza la clave web del proyecto en frontend20/src/environments/firebase.config.ts';
+        console.error(`❌ ${msg}`);
+        this.permissionMessageSubject.next(msg);
+      } else {
+        console.warn('⚠️ Error solicitando permiso de notificación:', err);
+      }
     }
   }
 
@@ -144,7 +177,16 @@ export class FirebaseService {
       token_fcm: payload.token_fcm.substring(0, 20) + '...'
     });
 
-    return this.http.post(`${this.API_URL}/push/register-token`, payload);
+    return this.http.post(`${this.API_URL}/push/register-token`, payload).pipe(
+      catchError((error) => {
+        if (error?.status === 401) {
+          console.warn('⚠️ No se pudo registrar el token FCM porque no hay sesión autenticada.');
+          return of(null);
+        }
+
+        throw error;
+      })
+    );
   }
 
   /**
@@ -232,11 +274,19 @@ export class FirebaseService {
     return localStorage.getItem('fcm_token');
   }
 
+  getNotificationPermission(): NotificationPermission {
+    return this.notificationsPermission;
+  }
+
   /**
    * Observable para el token FCM
    */
   getToken$(): Observable<string | null> {
     return this.tokenSubject.asObservable();
+  }
+
+  getPermissionMessage$(): Observable<string | null> {
+    return this.permissionMessageSubject.asObservable();
   }
 
   /**

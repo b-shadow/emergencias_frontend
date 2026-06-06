@@ -1,8 +1,11 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PostulacionesService } from '@modules/assignment-attention/services/postulaciones.service';
 import { ThemeService } from '@core/services/theme.service';
+import { WorkshopService } from '@core/services/workshop.service';
+import { TallerServicio } from '@core/models/especialidad-servicio.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -26,7 +29,7 @@ interface Postulacion {
 @Component({
   selector: 'app-applications',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="px-6 py-4">
       <!-- Header -->
@@ -176,6 +179,74 @@ interface Postulacion {
             Postulada: {{ postulacion.fecha_postulacion | date: 'short' }}
           </p>
 
+          <!-- Cotización -->
+          <div class="mb-4 p-3 rounded border" [ngClass]="isDarkMode ? 'bg-slate-800 border-slate-600' : 'bg-slate-50 border-slate-200'">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-semibold" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                Cotización
+              </p>
+              <button
+                *ngIf="postulacion.estado_postulacion === 'POSTULADA'"
+                (click)="toggleCotizacion(postulacion.id_postulacion)"
+                class="text-xs px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {{ cotizacionVisible[postulacion.id_postulacion] ? 'Ocultar' : 'Gestionar' }}
+              </button>
+            </div>
+
+            <div *ngIf="cotizaciones[postulacion.id_postulacion]" class="mt-2 text-xs" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
+              Estado: <strong>{{ cotizaciones[postulacion.id_postulacion].estado_cotizacion }}</strong> ·
+              Total: <strong>{{ cotizaciones[postulacion.id_postulacion].precio_total_estimado | number:'1.2-2' }}</strong>
+            </div>
+
+            <div *ngIf="cotizacionVisible[postulacion.id_postulacion]" class="mt-3 space-y-2">
+              <div class="max-h-36 overflow-auto rounded border p-2"
+                [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500' : 'bg-white border-gray-300'">
+                <label *ngFor="let s of misServicios" class="flex items-center gap-2 text-sm py-1"
+                  [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
+                  <input
+                    type="checkbox"
+                    [checked]="hasServicioSeleccionado(postulacion.id_postulacion, s.id_taller_servicio)"
+                    (change)="onServicioCotizacionChange(postulacion.id_postulacion, s.id_taller_servicio, $any($event.target).checked)"
+                  />
+                  <span>{{ s.nombre_servicio }} {{ s.categoria_tarifa ? '(' + s.categoria_tarifa + ')' : '' }}</span>
+                </label>
+              </div>
+              <div *ngFor="let item of cotizacionForm[postulacion.id_postulacion].servicios" class="grid grid-cols-12 gap-2 items-center">
+                <span class="col-span-8 text-xs" [ngClass]="isDarkMode ? 'text-slate-200' : 'text-slate-700'">{{ item.nombre_servicio || item.id_taller_servicio }}</span>
+                <input type="number" min="0" [(ngModel)]="item.precio_servicio"
+                  placeholder="Precio"
+                  class="col-span-4 p-2 rounded border text-sm"
+                  [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'" />
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="number" min="0" [(ngModel)]="cotizacionForm[postulacion.id_postulacion].costo_ida"
+                  placeholder="Costo ida"
+                  class="p-2 rounded border text-sm"
+                  [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'" />
+                <input type="text" [value]="getSubtotalCotizacion(postulacion.id_postulacion) | number:'1.2-2'" disabled
+                  placeholder="Subtotal"
+                  class="p-2 rounded border text-sm opacity-70"
+                  [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'" />
+              </div>
+              <input type="text" [(ngModel)]="cotizacionForm[postulacion.id_postulacion].tipo_pintura"
+                placeholder="Tipo de pintura (chaperio)"
+                class="w-full p-2 rounded border text-sm"
+                [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'" />
+              <textarea [(ngModel)]="cotizacionForm[postulacion.id_postulacion].detalle"
+                placeholder="Detalle de cotizacion"
+                rows="2"
+                class="w-full p-2 rounded border text-sm"
+                [ngClass]="isDarkMode ? 'bg-slate-700 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'"></textarea>
+              <button
+                (click)="guardarCotizacion(postulacion.id_postulacion)"
+                class="w-full px-3 py-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium"
+              >
+                Guardar cotización
+              </button>
+            </div>
+          </div>
+
           <!-- Action Button -->
           <button *ngIf="postulacion.estado_postulacion === 'POSTULADA'"
                   (click)="retirarPostulacion(postulacion.id_postulacion)"
@@ -238,6 +309,21 @@ interface Postulacion {
 export class ApplicationsComponent implements OnInit, OnDestroy {
   postulaciones: Postulacion[] = [];
   postulacionesFiltradas: Postulacion[] = [];
+  misServicios: TallerServicio[] = [];
+  cotizaciones: Record<string, any> = {};
+  cotizacionVisible: Record<string, boolean> = {};
+  cotizacionForm: Record<string, {
+    servicios: {
+      id_taller_servicio: string;
+      precio_servicio: number;
+      nombre_servicio?: string;
+      categoria_tarifa?: string;
+      incluido_en_solicitud: boolean;
+    }[];
+    costo_ida: number;
+    tipo_pintura: string;
+    detalle: string;
+  }> = {};
   filtroActual: string = 'TODAS';
   isLoading = true;
   error: string | null = null;
@@ -249,6 +335,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     private postulacionesService: PostulacionesService,
     private router: Router,
     private themeService: ThemeService,
+    private workshopService: WorkshopService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -261,6 +348,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       });
 
     this.cargarPostulaciones();
+    this.cargarMisServicios();
   }
 
   ngOnDestroy(): void {
@@ -276,6 +364,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       next: (data: any) => {
         this.postulaciones = data.data || data;
         this.aplicarFiltro();
+        this.inicializarCotizaciones();
         this.isLoading = false;
         this.cdr.markForCheck();
       },
@@ -322,6 +411,125 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   onRefresh(): void {
     this.cargarPostulaciones();
+  }
+
+  cargarMisServicios(): void {
+    this.workshopService.getMisServicios().subscribe({
+      next: (rows) => {
+        this.misServicios = rows || [];
+      },
+      error: () => {
+        this.misServicios = [];
+      },
+    });
+  }
+
+  inicializarCotizaciones(): void {
+    this.postulaciones.forEach((p) => {
+      if (!this.cotizacionForm[p.id_postulacion]) {
+          this.cotizacionForm[p.id_postulacion] = {
+            servicios: [],
+            costo_ida: 0,
+            tipo_pintura: '',
+            detalle: '',
+          };
+      }
+    });
+  }
+
+  toggleCotizacion(idPostulacion: string): void {
+    this.cotizacionVisible[idPostulacion] = !this.cotizacionVisible[idPostulacion];
+    if (!this.cotizacionVisible[idPostulacion]) return;
+    if (this.cotizaciones[idPostulacion]) return;
+
+    this.postulacionesService.obtenerCotizacion(idPostulacion).subscribe({
+      next: (cot) => {
+        this.cotizaciones[idPostulacion] = cot;
+        this.cotizacionForm[idPostulacion] = {
+          servicios: (cot.servicios || []).map((s: any) => ({
+            id_taller_servicio: s.id_taller_servicio,
+            precio_servicio: Number(s.precio_servicio || 0),
+            nombre_servicio: s.nombre_servicio || '',
+            categoria_tarifa: s.categoria_tarifa || '',
+            incluido_en_solicitud: s.incluido_en_solicitud !== false,
+          })),
+          costo_ida: cot.costo_ida,
+          tipo_pintura: cot.tipo_pintura || '',
+          detalle: '',
+        };
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        // Sin cotización aún para esta postulación
+      },
+    });
+  }
+
+  onServicioCotizacionChange(idPostulacion: string, idTallerServicio: string, checked: boolean): void {
+    const form = this.cotizacionForm[idPostulacion];
+    if (!form) return;
+    const servicio = this.misServicios.find((s) => s.id_taller_servicio === idTallerServicio);
+    if (!servicio) return;
+
+    const existingIndex = form.servicios.findIndex((s) => s.id_taller_servicio === idTallerServicio);
+    if (!checked) {
+      if (existingIndex >= 0) form.servicios.splice(existingIndex, 1);
+      return;
+    }
+    if (existingIndex >= 0) return;
+
+    form.servicios.push({
+      id_taller_servicio: idTallerServicio,
+      precio_servicio: Number(servicio.precio_base || 0),
+      nombre_servicio: servicio.nombre_servicio || '',
+      categoria_tarifa: servicio.categoria_tarifa || '',
+      incluido_en_solicitud: true,
+    });
+    if (form.costo_ida <= 0 && typeof servicio.precio_ida_minimo === 'number') {
+      form.costo_ida = Number(servicio.precio_ida_minimo);
+    }
+    if ((servicio.categoria_tarifa || '').toUpperCase() === 'CHAPERIO' && !form.tipo_pintura) {
+      form.tipo_pintura = servicio.tipo_pintura_chaperio || '';
+    }
+  }
+
+  hasServicioSeleccionado(idPostulacion: string, idTallerServicio: string): boolean {
+    return !!this.cotizacionForm[idPostulacion]?.servicios?.some((s) => s.id_taller_servicio === idTallerServicio);
+  }
+
+  getSubtotalCotizacion(idPostulacion: string): number {
+    const servicios = this.cotizacionForm[idPostulacion]?.servicios || [];
+    return servicios.reduce((acc, s) => acc + Number(s.precio_servicio || 0), 0);
+  }
+
+  guardarCotizacion(idPostulacion: string): void {
+    const form = this.cotizacionForm[idPostulacion];
+    if (!form?.servicios?.length) {
+      this.error = 'Selecciona al menos un servicio para cotizar';
+      return;
+    }
+    this.postulacionesService.crearOActualizarCotizacion(idPostulacion, {
+      servicios: form.servicios.map((s) => ({
+        id_taller_servicio: s.id_taller_servicio,
+        precio_servicio: Number(s.precio_servicio || 0),
+        nombre_servicio: s.nombre_servicio || null,
+        categoria_tarifa: s.categoria_tarifa || null,
+        incluido_en_solicitud: s.incluido_en_solicitud,
+      })),
+      costo_ida: Number(form.costo_ida || 0),
+      tipo_pintura: form.tipo_pintura || null,
+      detalle: form.detalle || null,
+    }).subscribe({
+      next: (cot) => {
+        this.cotizaciones[idPostulacion] = cot;
+        this.cotizacionVisible[idPostulacion] = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.error = err?.error?.detail || 'Error al guardar cotización';
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   getEstadoClasses(estado: string): string {

@@ -5,6 +5,8 @@ import { AuthService } from '@core/services/auth.service';
 import { ThemeService } from '@core/services/theme.service';
 import { RolUsuario } from '@core/models/user.model';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog.component';
+import { WorkshopService } from '@core/services/workshop.service';
+import { TrabajadoresService } from '@modules/assignment-attention/services/trabajadores.service';
 
 @Component({
   selector: 'app-layout',
@@ -35,6 +37,9 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog.compon
             <h1 class="text-lg font-bold text-gray-900 dark:text-white">
               🚚 {{ workshopName }}
             </h1>
+            <p *ngIf="tenantLabel" class="text-xs text-gray-600 dark:text-slate-400 mt-0.5">
+              Tenant: {{ tenantLabel }}
+            </p>
           </div>
 
           <!-- Right: Theme Toggle Button -->
@@ -91,6 +96,10 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog.compon
                     <span class="text-lg">👤</span>
                     <span>Perfil</span>
                   </a>
+                  <a routerLink="/workshops/subscription" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">&#128179;</span>
+                    <span>Gestionar Suscripci&oacute;n</span>
+                  </a>
                   <a routerLink="/workshops/especialidades" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
                     <span class="text-lg">🏷️</span>
                     <span>Especialidades</span>
@@ -129,6 +138,14 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog.compon
                   <a routerLink="/assignments" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
                     <span class="text-lg">🔧</span>
                     <span>Asignaciones Activas</span>
+                  </a>
+                  <a routerLink="/workers" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">👷</span>
+                    <span>Trabajadores</span>
+                  </a>
+                  <a routerLink="/tracking-recojo" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
+                    <span class="text-lg">🛰️</span>
+                    <span>Tracking Recojo</span>
                   </a>
                   <a routerLink="/service-results" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
                     <span class="text-lg">✅</span>
@@ -285,6 +302,7 @@ export class LayoutComponent implements OnInit {
   showLogoutDialog = false;
   isDarkMode = false;
   workshopName = 'Taller Mecánico';
+  tenantLabel = '';
 
   // Submenu expansion states
   expandedMenus: { [key: string]: boolean } = {
@@ -309,7 +327,9 @@ export class LayoutComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private themeService: ThemeService,
-    private router: Router
+    private router: Router,
+    private workshopService: WorkshopService,
+    private trabajadoresService: TrabajadoresService
   ) {
     // Initialize dark mode from service
     this.isDarkMode = this.themeService.isDarkMode();
@@ -335,6 +355,7 @@ export class LayoutComponent implements OnInit {
     } else {
       this.workshopName = 'Mi Cuenta';
     }
+    this.cargarTenantSiCorresponde();
 
     console.log('Final Workshop Name:', this.workshopName);
 
@@ -379,4 +400,26 @@ export class LayoutComponent implements OnInit {
   onLogoutCancelled(): void {
     this.showLogoutDialog = false;
   }
+
+  private cargarTenantSiCorresponde(): void {
+    if (this.authService.isTaller()) {
+      this.workshopService.getMyTenantContext().subscribe({
+        next: (ctx) => {
+          this.tenantLabel = ctx?.slug_tenant || ctx?.nombre_tenant || '';
+        },
+      });
+      return;
+    }
+
+    if (this.authService.isTrabajador()) {
+      this.trabajadoresService.getMiTenant().subscribe({
+        next: (ctx) => {
+          this.tenantLabel = ctx?.slug_tenant || ctx?.nombre_tenant || '';
+        },
+      });
+    }
+  }
 }
+
+
+

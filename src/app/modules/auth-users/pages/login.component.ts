@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { ThemeService } from '@core/services/theme.service';
 import { FirebaseService } from '@core/services/firebase.service';
@@ -266,7 +266,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     private themeService: ThemeService,
     private firebaseService: FirebaseService,
     private pushNotificationService: PushNotificationService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -283,6 +284,26 @@ export class LoginComponent implements OnInit, OnDestroy {
       .subscribe((isDark: boolean) => {
         this.isDarkMode = isDark;
       });
+
+    this.firebaseService.getPermissionMessage$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((msg) => {
+        if (msg) {
+          this.showNotification = true;
+          this.notificationType = 'warning';
+          this.notificationTitle = 'Notificaciones deshabilitadas';
+          this.notificationMessage = msg;
+        }
+      });
+
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      if (params.get('tallerPendiente') === '1') {
+        this.showNotification = true;
+        this.notificationType = 'info';
+        this.notificationTitle = 'Registro recibido';
+        this.notificationMessage = 'Pago validado. Tu taller está pendiente de aprobación administrativa.';
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -333,11 +354,9 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.notificationMessage = 'Autenticación exitosa, configurando notificaciones...';
 
         try {
-          // Inicializar Firebase si no está inicializado
-          if (!this.firebaseService.isFCMAvailable()) {
-            console.log('📱 Inicializando Firebase...');
-            await this.firebaseService.initializeFirebase();
-          }
+          // Solicitar permiso/token cuando aún no está habilitado
+          console.log('📱 Inicializando notificaciones...');
+          await this.firebaseService.ensurePermissionAndToken();
 
           // Registrar token FCM en el backend
           console.log('📤 Registrando token FCM en el backend...');

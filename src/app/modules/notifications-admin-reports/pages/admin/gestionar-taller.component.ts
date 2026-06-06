@@ -67,6 +67,8 @@ import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
                 <th class="px-4 py-3 text-left font-semibold text-gray-900 dark:text-white">Nombre Taller</th>
                 <th class="px-4 py-3 text-left font-semibold text-gray-900 dark:text-white">NIT</th>
                 <th class="px-4 py-3 text-left font-semibold text-gray-900 dark:text-white">Correo</th>
+                <th class="px-4 py-3 text-left font-semibold text-gray-900 dark:text-white">Plan</th>
+                <th class="px-4 py-3 text-center font-semibold text-gray-900 dark:text-white">Días Restantes</th>
                 <th class="px-4 py-3 text-center font-semibold text-gray-900 dark:text-white">Aprobación</th>
                 <th class="px-4 py-3 text-center font-semibold text-gray-900 dark:text-white">Estado</th>
                 <th class="px-4 py-3 text-center font-semibold text-gray-900 dark:text-white">Usuario</th>
@@ -78,6 +80,8 @@ import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
                 <td class="px-4 py-3 text-gray-900 dark:text-white font-medium">{{ taller.nombre_taller }}</td>
                 <td class="px-4 py-3 text-gray-600 dark:text-slate-400">{{ taller.nit || '-' }}</td>
                 <td class="px-4 py-3 text-gray-600 dark:text-slate-400">{{ taller.correo }}</td>
+                <td class="px-4 py-3 text-gray-600 dark:text-slate-400">{{ taller.plan_actual || '-' }}</td>
+                <td class="px-4 py-3 text-center text-gray-600 dark:text-slate-400">{{ taller.dias_restantes_plan ?? '-' }}</td>
                 <td class="px-4 py-3 text-center">
                   <span [ngClass]="getEstadoAprobacionClass(taller.estado_aprobacion)" class="px-3 py-1 rounded-full text-xs font-medium">
                     {{ taller.estado_aprobacion }}

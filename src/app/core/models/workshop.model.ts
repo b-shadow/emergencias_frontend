@@ -12,6 +12,7 @@ export enum EstadoOperativoTaller {
 
 export interface TallerPerfil {
   id_taller: string;
+  id_tenant: string;
   id_usuario: string;
   nombre_taller: string;
   razon_social: string | null;
@@ -26,6 +27,17 @@ export interface TallerPerfil {
   fecha_registro: string;
   fecha_aprobacion: string | null;
   correo: string;
+  plan_actual?: string | null;
+  fecha_fin_plan?: string | null;
+  dias_restantes_plan?: number | null;
+}
+
+export interface TenantTallerContext {
+  id_tenant: string;
+  nombre_tenant: string;
+  slug_tenant: string;
+  es_activo: boolean;
+  fecha_creacion: string;
 }
 
 export interface TallerPerfilUpdate {

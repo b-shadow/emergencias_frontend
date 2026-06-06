@@ -118,12 +118,16 @@ export class PushNotificationService {
    * Registra el token FCM en el backend después de login
    */
   registerTokenInBackend(): Promise<any> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+      if (this.firebaseService.getNotificationPermission() !== 'granted') {
+        resolve(null);
+        return;
+      }
+
       const token = this.firebaseService.getFCMToken();
 
       if (!token) {
-        console.warn('⚠️ No hay token FCM disponible');
-        reject('No FCM token available');
+        resolve(null);
         return;
       }
 

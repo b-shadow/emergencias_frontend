@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, timeout } from 'rxjs/operators';
 import { WorkshopService } from '@core/services/workshop.service';
 import { ThemeService } from '@core/services/theme.service';
 import { TallerPerfil, TallerPerfilUpdate } from '@core/models/workshop.model';
@@ -348,16 +348,32 @@ export class EditarPerfilComponent implements OnInit, OnDestroy {
 
     this.workshopService
       .getMyProfile()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        timeout(15000)
+      )
       .subscribe({
         next: (profile) => {
-          this.isApproved = profile.estado_aprobacion === 'APROBADO';
-          this.initializeForm(profile);
-          this.loading = false;
+          try {
+            if (!profile || !profile.id_taller) {
+              this.error = 'No se pudo cargar el perfil del taller';
+              return;
+            }
+            this.isApproved = profile.estado_aprobacion === 'APROBADO';
+            this.initializeForm(profile);
+          } catch (e) {
+            console.error('Error processing profile payload:', e);
+            this.error = 'Error al procesar la información del perfil';
+          } finally {
+            this.loading = false;
+          }
         },
         error: (err) => {
           this.loading = false;
-          this.error = err.error?.detail || 'Error al cargar el perfil del taller';
+          this.error =
+            err?.name === 'TimeoutError'
+              ? 'La carga del perfil tardó demasiado. Intenta recargar.'
+              : err?.error?.detail || 'Error al cargar el perfil del taller';
           console.error('Error loading profile:', err);
         }
       });

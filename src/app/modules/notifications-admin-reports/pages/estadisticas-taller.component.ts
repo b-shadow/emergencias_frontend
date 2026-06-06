@@ -122,6 +122,48 @@ import {
             <div class="text-sm text-gray-600 dark:text-slate-400">Tasa completacion</div>
             <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{{ est.tasa_completacion | number : '1.0-2' }}%</div>
           </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Tiempo prom. asignacion</div>
+            <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-400 mt-2">{{ est.tiempo_promedio_asignacion_minutos | number : '1.0-1' }} min</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Tiempo prom. llegada</div>
+            <div class="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-2">{{ est.tiempo_promedio_llegada_minutos | number : '1.0-1' }} min</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Zona con mas incidentes</div>
+            <div class="text-xl font-bold text-slate-700 dark:text-slate-200 mt-2">{{ est.zona_mas_incidentes || 'N/D' }}</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" *ngIf="respuesta.estadisticas as est">
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Incidentes por tipo</h3>
+            <div *ngIf="!est.incidentes_por_tipo.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
+            <div *ngFor="let item of est.incidentes_por_tipo" class="flex justify-between text-sm py-1 border-b border-gray-100 dark:border-slate-700">
+              <span class="text-gray-700 dark:text-slate-300">{{ item.tipo }}</span>
+              <strong class="text-gray-900 dark:text-white">{{ item.cantidad }}</strong>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Cancelaciones por tipo</h3>
+            <div *ngIf="!est.cancelaciones_por_tipo.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
+            <div *ngFor="let item of est.cancelaciones_por_tipo" class="flex justify-between text-sm py-1 border-b border-gray-100 dark:border-slate-700">
+              <span class="text-gray-700 dark:text-slate-300">{{ item.motivo }}</span>
+              <strong class="text-gray-900 dark:text-white">{{ item.cantidad }}</strong>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Eficiencia por servicio</h3>
+            <div *ngIf="!est.eficiencia_por_servicio.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
+            <div *ngFor="let item of est.eficiencia_por_servicio" class="py-2 border-b border-gray-100 dark:border-slate-700">
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-700 dark:text-slate-300">{{ item.servicio }}</span>
+                <strong class="text-gray-900 dark:text-white">{{ item.tasa_completacion | number : '1.0-2' }}%</strong>
+              </div>
+              <div class="text-xs text-gray-500 dark:text-slate-400">{{ item.categoria_tarifa }} · {{ item.completados }}/{{ item.total }}</div>
+            </div>
+          </div>
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
