@@ -11,6 +11,12 @@ export interface EstadisticaProblema {
   porcentaje: number;
 }
 
+export interface KPIFrecuente {
+  nombre: string;
+  cantidad: number;
+  porcentaje: number;
+}
+
 export interface EstadisticaDemacruzada {
   periodo: string;
   cantidad: number;
@@ -45,8 +51,16 @@ export interface EstadisticaGeneralTaller {
   fecha_fin: string;
   total_solicitudes_atendidas: number;
   total_solicitudes_canceladas: number;
+  solicitudes_recibidas: number;
+  solicitudes_aceptadas: number;
+  tasa_aceptacion: number;
   total_servicios_completados: number;
   tasa_completacion: number;
+  calificacion_promedio?: number | null;
+  total_pagos_confirmados: number;
+  monto_total_pagado: number;
+  monto_promedio_pago: number;
+  cumplimiento_eta_pct: number;
   diagnosticos: EstadisticaProblema[];
   total_diagnosticos_con_seguimiento: number;
   dias_mayor_demanda: EstadisticaDemacruzada[];
@@ -58,6 +72,7 @@ export interface EstadisticaGeneralTaller {
   zona_mas_incidentes?: string | null;
   cancelaciones_por_tipo: KPICancelacionTipo[];
   eficiencia_por_servicio: KPIEficienciaServicio[];
+  servicios_mas_realizados: KPIFrecuente[];
 }
 
 export interface FiltroReporteTallerAplicado {

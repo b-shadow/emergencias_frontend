@@ -11,6 +11,9 @@ export {
   TallerServicio,
   TallerServicioCreate,
   TallerServicioUpdate,
+  SolicitudServicioTaller,
+  SolicitudServicioTallerCreate,
+  SolicitudServicioTallerRechazo,
 } from '@core/models/especialidad-servicio.model';
 import {
   Especialidad,
@@ -20,6 +23,9 @@ import {
   TallerServicio,
   TallerServicioCreate,
   TallerServicioUpdate,
+  SolicitudServicioTaller,
+  SolicitudServicioTallerCreate,
+  SolicitudServicioTallerRechazo,
 } from '@core/models/especialidad-servicio.model';
 
 // ============================================================================
@@ -266,5 +272,25 @@ export class WorkshopService {
    */
   actualizarServicio(servicioId: string, payload: TallerServicioUpdate): Observable<TallerServicio> {
     return this.http.patch<TallerServicio>(`${this.apiUrl}/talleres/me/servicios/${servicioId}`, payload);
+  }
+
+  solicitarNuevoServicio(payload: SolicitudServicioTallerCreate): Observable<SolicitudServicioTaller> {
+    return this.http.post<SolicitudServicioTaller>(`${this.apiUrl}/talleres/me/servicios/solicitudes`, payload);
+  }
+
+  listarMisSolicitudesServicio(): Observable<SolicitudServicioTaller[]> {
+    return this.http.get<SolicitudServicioTaller[]>(`${this.apiUrl}/talleres/me/servicios/solicitudes`);
+  }
+
+  listarSolicitudesServicioAdmin(): Observable<SolicitudServicioTaller[]> {
+    return this.http.get<SolicitudServicioTaller[]>(`${this.apiUrl}/admin/servicios/solicitudes`);
+  }
+
+  aprobarSolicitudServicio(solicitudId: string): Observable<SolicitudServicioTaller> {
+    return this.http.post<SolicitudServicioTaller>(`${this.apiUrl}/admin/servicios/solicitudes/${solicitudId}/aprobar`, {});
+  }
+
+  rechazarSolicitudServicio(solicitudId: string, motivo?: string): Observable<SolicitudServicioTaller> {
+    return this.http.post<SolicitudServicioTaller>(`${this.apiUrl}/admin/servicios/solicitudes/${solicitudId}/rechazar`, { motivo_rechazo: motivo || null });
   }
 }

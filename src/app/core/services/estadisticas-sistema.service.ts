@@ -16,6 +16,12 @@ export interface IncidenteFrequente {
   porcentaje: number;
 }
 
+export interface ElementoFrecuente {
+  nombre: string;
+  cantidad: number;
+  porcentaje: number;
+}
+
 export interface TallerActividad {
   nombre_taller: string;
   solicitudes_atendidas: number;
@@ -34,10 +40,19 @@ export interface EstadisticasGeneralesResponse {
   fecha_fin: string;
   total_emergencias: number;
   total_solicitudes_atendidas: number;
+  total_solicitudes_canceladas: number;
+  tasa_cancelacion: number;
   total_servicios_realizados: number;
   talleres_activos: number;
   clientes_activos: number;
+  promedio_calificacion?: number | null;
+  total_pagos_confirmados: number;
+  total_pagos_pendientes: number;
+  monto_total_pagado: number;
+  monto_promedio_pago: number;
   incidentes_frecuentes: IncidenteFrequente[];
+  servicios_frecuentes: ElementoFrecuente[];
+  especialidades_frecuentes: ElementoFrecuente[];
   talleres_top: TallerActividad[];
   zonas_criticas: ZonaEmergencia[];
   tiempo_respuesta: TiempoRespuesta | null;

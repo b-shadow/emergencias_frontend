@@ -121,6 +121,55 @@ import {
           </div>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Cancelaciones</div>
+            <div class="text-3xl font-bold text-red-600 dark:text-red-400 mt-2">{{ estadisticas.total_solicitudes_canceladas }}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Tasa cancelación</div>
+            <div class="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-2">{{ estadisticas.tasa_cancelacion | number : '1.0-2' }}%</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Calificación prom.</div>
+            <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-2">{{ estadisticas.promedio_calificacion ?? 'N/D' }}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Pagos confirmados</div>
+            <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ estadisticas.total_pagos_confirmados }}</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Monto total pagado</div>
+            <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-400 mt-2">{{ estadisticas.monto_total_pagado | number : '1.2-2' }}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Monto promedio pago</div>
+            <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{{ estadisticas.monto_promedio_pago | number : '1.2-2' }}</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Servicios más demandados</h3>
+            <div *ngIf="!estadisticas.servicios_frecuentes.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
+            <div *ngFor="let item of estadisticas.servicios_frecuentes" class="flex justify-between text-sm py-1 border-b border-gray-100 dark:border-slate-700">
+              <span class="text-gray-700 dark:text-slate-300">{{ item.nombre }}</span>
+              <strong class="text-gray-900 dark:text-white">{{ item.cantidad }}</strong>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Especialidades más demandadas</h3>
+            <div *ngIf="!estadisticas.especialidades_frecuentes.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
+            <div *ngFor="let item of estadisticas.especialidades_frecuentes" class="flex justify-between text-sm py-1 border-b border-gray-100 dark:border-slate-700">
+              <span class="text-gray-700 dark:text-slate-300">{{ item.nombre }}</span>
+              <strong class="text-gray-900 dark:text-white">{{ item.cantidad }}</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white">Reporte tabular</h3>

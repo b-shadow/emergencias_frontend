@@ -5,6 +5,8 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '@environments/environment';
+import { WorkshopService } from '@core/services/workshop.service';
+import { SolicitudServicioTaller } from '@core/models/especialidad-servicio.model';
 
 interface Servicio {
   id_servicio: string;
@@ -41,7 +43,13 @@ interface Servicio {
       <!-- Content -->
       <div *ngIf="!cargando" class="space-y-4">
         <!-- Botón Agregar -->
-        <div class="flex justify-end">
+        <div class="flex justify-end gap-2">
+          <button
+            (click)="abrirSolicitudes()"
+            class="px-6 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg font-medium transition flex items-center gap-2"
+          >
+            Servicios Solicitados
+          </button>
           <button
             (click)="abrirFormulario()"
             class="px-6 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg font-medium transition flex items-center gap-2"
@@ -171,6 +179,39 @@ interface Servicio {
           </div>
         </div>
       </div>
+
+      <!-- Modal Solicitudes -->
+      <div *ngIf="mostrarSolicitudes" class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto">
+          <div class="p-6 border-b border-gray-200 dark:border-slate-700">
+            <div class="flex justify-between items-center">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Servicios Solicitados</h2>
+                <p class="text-sm text-gray-600 dark:text-slate-400">Solicitudes enviadas por los talleres.</p>
+              </div>
+              <button (click)="cerrarSolicitudes()" class="text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-white text-2xl">×</button>
+            </div>
+          </div>
+          <div class="p-6 space-y-3">
+            <div *ngFor="let sol of solicitudesServicio" class="p-4 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-gray-900 dark:text-white">{{ sol.nombre_servicio }}</p>
+                  <p class="text-sm text-gray-600 dark:text-slate-300">{{ sol.descripcion || 'Sin descripción' }}</p>
+                  <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">Taller: {{ sol.nombre_taller || 'Desconocido' }}</p>
+                  <p class="text-xs mt-1" [ngClass]="estadoClass(sol.estado)">Estado: {{ sol.estado }}</p>
+                </div>
+                <div class="flex gap-2">
+                  <button *ngIf="sol.estado === 'EN_ESPERA'" (click)="aprobarSolicitud(sol)" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm">Aceptar</button>
+                  <button *ngIf="sol.estado === 'EN_ESPERA'" (click)="rechazarSolicitud(sol)" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm">Rechazar</button>
+                </div>
+              </div>
+              <p *ngIf="sol.motivo_rechazo" class="text-xs text-red-500 mt-2">Motivo: {{ sol.motivo_rechazo }}</p>
+            </div>
+            <p *ngIf="solicitudesServicio.length === 0" class="text-center text-gray-500 dark:text-slate-400 py-6">No hay solicitudes registradas.</p>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -181,10 +222,12 @@ interface Servicio {
 })
 export class GestionServiciosComponent implements OnInit, OnDestroy {
   servicios: Servicio[] = [];
+  solicitudesServicio: SolicitudServicioTaller[] = [];
   cargando = true;
   error: string | null = null;
   mostrarFormulario = false;
   mostrarConfirmacion = false;
+  mostrarSolicitudes = false;
   guardando = false;
   eliminando = false;
   editandoId: string | null = null;
@@ -198,7 +241,7 @@ export class GestionServiciosComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private apiUrl = `${environment.apiUrl}/admin/servicios`;
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  constructor(private http: HttpClient, private workshopService: WorkshopService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.cargarServicios();
@@ -228,12 +271,35 @@ export class GestionServiciosComponent implements OnInit, OnDestroy {
           console.error('Error:', err);
         }
       });
+    this.cargarSolicitudes();
+  }
+
+  cargarSolicitudes(): void {
+    this.workshopService.listarSolicitudesServicioAdmin()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.solicitudesServicio = data || [];
+        },
+        error: () => {
+          this.solicitudesServicio = [];
+        }
+      });
   }
 
   abrirFormulario(): void {
     this.editandoId = null;
     this.formulario = { nombre_servicio: '', descripcion: '' };
     this.mostrarFormulario = true;
+  }
+
+  abrirSolicitudes(): void {
+    this.mostrarSolicitudes = true;
+    this.cargarSolicitudes();
+  }
+
+  cerrarSolicitudes(): void {
+    this.mostrarSolicitudes = false;
   }
 
   editarServicio(srv: Servicio): void {
@@ -323,5 +389,34 @@ export class GestionServiciosComponent implements OnInit, OnDestroy {
           console.error('Error:', err);
         }
       });
+  }
+
+  aprobarSolicitud(sol: SolicitudServicioTaller): void {
+    this.workshopService.aprobarSolicitudServicio(sol.id_solicitud_servicio_taller)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.cargarSolicitudes(),
+        error: (err) => {
+          this.error = err?.error?.detail || 'Error al aprobar solicitud';
+        }
+      });
+  }
+
+  rechazarSolicitud(sol: SolicitudServicioTaller): void {
+    const motivo = prompt('Motivo del rechazo (opcional)') || '';
+    this.workshopService.rechazarSolicitudServicio(sol.id_solicitud_servicio_taller, motivo)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.cargarSolicitudes(),
+        error: (err) => {
+          this.error = err?.error?.detail || 'Error al rechazar solicitud';
+        }
+      });
+  }
+
+  estadoClass(estado: string): string {
+    if (estado === 'APROBADO') return 'text-green-600 dark:text-green-400';
+    if (estado === 'RECHAZADO') return 'text-red-600 dark:text-red-400';
+    return 'text-amber-600 dark:text-amber-400';
   }
 }

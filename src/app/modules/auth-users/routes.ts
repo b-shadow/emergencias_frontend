@@ -5,7 +5,7 @@ import { LoginComponent } from './pages/login.component';
 import { RegisterTallerStripeV2Component } from './pages/register-taller-stripe-v2.component';
 import { ForgotPasswordComponent } from './pages/forgot-password.component';
 import { ResetPasswordComponent } from './pages/reset-password.component';
-import { DashboardComponent } from '@modules/auth-users/pages/dashboard.component';
+import { DashboardComponent } from './pages/dashboard.component';
 import { VerPerfilComponent } from './pages/workshop-profile/ver-perfil.component';
 import { EditarPerfilComponent } from './pages/workshop-profile/editar-perfil.component';
 import { MisEspecialidadesComponent } from './pages/workshop-profile/mis-especialidades.component';

@@ -259,6 +259,9 @@ interface Asignacion {
               <div *ngIf="rp.cargo_cancelacion > 0" class="text-xs text-orange-500">
                 Cargo de cancelaciÃ³n aplicado: {{ rp.cargo_cancelacion | number:'1.2-2' }}
               </div>
+              <div *ngIf="!rp.puede_finalizar" class="text-xs text-red-500">
+                No puedes finalizar hasta que el pago estÃ© completo.
+              </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3">
               <input
@@ -429,11 +432,13 @@ interface Asignacion {
 
               <!-- Finalizar AsignaciÃ³n Button (only show if NOT ATENDIDA) -->
               <button *ngIf="asignacion.solicitud?.estado_actual !== 'ATENDIDA'"
+                      [disabled]="!(resumenPagos[asignacion.id_solicitud]?.puede_finalizar ?? false)"
                       (click)="finalizarAsignacion(asignacion.id_asignacion)"
                       class="w-full px-4 py-2 rounded-lg font-medium transition-all duration-300 mt-3"
-                      [ngClass]="isDarkMode ?
-                        'bg-purple-600 hover:bg-purple-700 text-white' :
-                        'bg-purple-500 hover:bg-purple-600 text-white'">
+                      [ngClass]="[
+                        isDarkMode ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white',
+                        !(resumenPagos[asignacion.id_solicitud]?.puede_finalizar ?? false) ? 'opacity-50 cursor-not-allowed' : ''
+                      ]">
                 <span class="material-icons text-base align-middle mr-1">check_circle</span>
                 Finalizar AsignaciÃ³n
               </button>

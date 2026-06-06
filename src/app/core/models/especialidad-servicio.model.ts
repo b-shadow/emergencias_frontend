@@ -61,3 +61,25 @@ export interface TallerServicioUpdate {
   precio_base?: number;
   tipo_pintura_chaperio?: string | null;
 }
+
+export interface SolicitudServicioTaller {
+  id_solicitud_servicio_taller: string;
+  id_taller: string;
+  nombre_taller?: string | null;
+  nombre_servicio: string;
+  descripcion?: string | null;
+  estado: 'EN_ESPERA' | 'APROBADO' | 'RECHAZADO';
+  motivo_rechazo?: string | null;
+  id_servicio_creado?: string | null;
+  fecha_solicitud: string;
+  fecha_resolucion?: string | null;
+}
+
+export interface SolicitudServicioTallerCreate {
+  nombre_servicio: string;
+  descripcion?: string | null;
+}
+
+export interface SolicitudServicioTallerRechazo {
+  motivo_rechazo?: string | null;
+}

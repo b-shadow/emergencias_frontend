@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { WorkshopService, Servicio, TallerServicio } from '@core/services/workshop.service';
+import { SolicitudServicioTaller } from '@core/models/especialidad-servicio.model';
 
 @Component({
   selector: 'app-mis-servicios',
@@ -27,7 +28,10 @@ import { WorkshopService, Servicio, TallerServicio } from '@core/services/worksh
       <div *ngIf="!cargando" class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">Servicios Actuales</h2>
-          <button (click)="abrirModalSolicitudes()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition">Agregar Servicio</button>
+          <div class="flex gap-2">
+            <button (click)="abrirModalSolicitudes()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition">Agregar Servicio</button>
+            <button (click)="abrirModalServiciosSolicitados()" class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white font-semibold rounded-lg transition">Servicios Solicitados</button>
+          </div>
         </div>
 
         <div class="mb-4" *ngIf="misServicios.length > 0">
@@ -82,6 +86,54 @@ import { WorkshopService, Servicio, TallerServicio } from '@core/services/worksh
         </div>
       </div>
 
+      <div *ngIf="mostrarModalServiciosSolicitados" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Servicios Solicitados</h2>
+            <button (click)="cerrarModalServiciosSolicitados()" class="text-gray-500 text-2xl">x</button>
+          </div>
+          <div class="flex justify-between items-center mb-4">
+            <p class="text-sm text-gray-600 dark:text-slate-400">Solicitudes enviadas por tu taller y su estado actual.</p>
+            <button (click)="abrirFormularioNuevaSolicitud()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">Nueva solicitud</button>
+          </div>
+          <div class="space-y-3">
+            <div *ngFor="let sol of solicitudesServicio" class="p-4 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-gray-900 dark:text-white">{{ sol.nombre_servicio }}</p>
+                  <p class="text-sm text-gray-600 dark:text-slate-400">{{ sol.descripcion || 'Sin descripción' }}</p>
+                  <p class="text-xs mt-1" [ngClass]="estadoClass(sol.estado)">Estado: {{ sol.estado }}</p>
+                  <p *ngIf="sol.motivo_rechazo" class="text-xs text-red-500 mt-1">Motivo: {{ sol.motivo_rechazo }}</p>
+                </div>
+                <span class="text-xs px-2 py-1 rounded bg-white dark:bg-slate-800 border">{{ sol.nombre_taller || 'Taller' }}</span>
+              </div>
+            </div>
+            <p *ngIf="solicitudesServicio.length === 0" class="text-sm text-gray-500 dark:text-slate-400">No tienes solicitudes registradas.</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="mostrarModalNuevaSolicitud" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-xl w-full p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Solicitar nuevo servicio</h3>
+          <p class="text-sm text-gray-600 dark:text-slate-400 mb-4">Completa los datos para que el administrador revise tu solicitud.</p>
+          <div class="grid gap-3">
+            <label class="text-sm font-semibold text-gray-700 dark:text-slate-300">
+              Nombre del servicio
+              <input type="text" [(ngModel)]="nuevaSolicitud.nombre_servicio" class="mt-1 w-full px-3 py-2 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white" />
+            </label>
+            <label class="text-sm font-semibold text-gray-700 dark:text-slate-300">
+              Descripción
+              <textarea [(ngModel)]="nuevaSolicitud.descripcion" rows="3" class="mt-1 w-full px-3 py-2 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"></textarea>
+            </label>
+          </div>
+          <div class="mt-4 flex justify-end gap-2">
+            <button (click)="cerrarFormularioNuevaSolicitud()" class="px-4 py-2 bg-gray-300 dark:bg-slate-600 rounded">Cancelar</button>
+            <button (click)="solicitarNuevoServicio()" [disabled]="guardando" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50">Solicitar</button>
+          </div>
+        </div>
+      </div>
+
       <div *ngIf="mostrarModalEditarEspecificaciones" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-xl w-full p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Editar especificaciones</h3>
@@ -115,6 +167,7 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
   misServicios: TallerServicio[] = [];
   todosServicios: Servicio[] = [];
   serviciosFiltrados: Servicio[] = [];
+  solicitudesServicio: SolicitudServicioTaller[] = [];
   cargando = true;
   guardando = false;
   error: string | null = null;
@@ -124,8 +177,15 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
   mostrarModal = false;
   mostrarModalConfigServicio = false;
   mostrarModalEditarEspecificaciones = false;
+  mostrarModalServiciosSolicitados = false;
+  mostrarModalNuevaSolicitud = false;
   servicioSeleccionado: Servicio | null = null;
   servicioEditando: TallerServicio | null = null;
+
+  nuevaSolicitud = {
+    nombre_servicio: '',
+    descripcion: '',
+  };
 
   formEspecificaciones = {
     disponible: true,
@@ -148,6 +208,10 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
           next: (mine) => { this.misServicios = mine || []; this.cargando = false; this.cdr.markForCheck(); },
           error: () => { this.error = 'Error al cargar mis servicios'; this.cargando = false; },
         });
+        this.workshopService.listarMisSolicitudesServicio().pipe(takeUntil(this.destroy$)).subscribe({
+          next: (sols) => { this.solicitudesServicio = sols || []; },
+          error: () => { this.solicitudesServicio = []; },
+        });
       },
       error: () => { this.error = 'Error al cargar servicios disponibles'; this.cargando = false; },
     });
@@ -162,6 +226,17 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
 
   abrirModalSolicitudes(): void { this.mostrarModal = true; this.actualizarServiciosFiltrados(); }
   cerrarModal(): void { this.mostrarModal = false; this.busqueda = ''; }
+  abrirModalServiciosSolicitados(): void { this.mostrarModalServiciosSolicitados = true; this.cargarSolicitudesServicio(); }
+  cerrarModalServiciosSolicitados(): void { this.mostrarModalServiciosSolicitados = false; }
+  abrirFormularioNuevaSolicitud(): void { this.mostrarModalNuevaSolicitud = true; }
+  cerrarFormularioNuevaSolicitud(): void { this.mostrarModalNuevaSolicitud = false; this.nuevaSolicitud = { nombre_servicio: '', descripcion: '' }; }
+
+  private cargarSolicitudesServicio(): void {
+    this.workshopService.listarMisSolicitudesServicio().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (sols) => { this.solicitudesServicio = sols || []; },
+      error: () => { this.solicitudesServicio = []; },
+    });
+  }
 
   get serviciosListaFiltrados(): TallerServicio[] {
     const t = this.busquedaActuales.trim().toLowerCase();
@@ -218,6 +293,28 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
     });
   }
 
+  solicitarNuevoServicio(): void {
+    if (!this.nuevaSolicitud.nombre_servicio.trim()) return;
+    this.guardando = true;
+    this.workshopService.solicitarNuevoServicio({
+      nombre_servicio: this.nuevaSolicitud.nombre_servicio.trim(),
+      descripcion: this.nuevaSolicitud.descripcion?.trim() || null,
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.guardando = false;
+        this.cerrarFormularioNuevaSolicitud();
+        this.cerrarModalServiciosSolicitados();
+        this.mensajeExito = 'Solicitud enviada';
+        this.cargarDatos();
+        setTimeout(() => (this.mensajeExito = null), 3000);
+      },
+      error: (err) => {
+        this.guardando = false;
+        this.error = err?.error?.detail || 'Error al solicitar servicio';
+      },
+    });
+  }
+
   guardarEspecificaciones(): void {
     if (!this.servicioEditando) return;
     this.guardando = true;
@@ -239,5 +336,11 @@ export class MisServiciosComponent implements OnInit, OnDestroy {
       next: () => { this.guardando = false; this.mensajeExito = 'Servicio removido'; this.cargarDatos(); setTimeout(() => (this.mensajeExito = null), 3000); },
       error: (err) => { this.guardando = false; this.error = err?.error?.detail || 'Error al remover servicio'; },
     });
+  }
+
+  estadoClass(estado: string): string {
+    if (estado === 'APROBADO') return 'text-green-600 dark:text-green-400';
+    if (estado === 'RECHAZADO') return 'text-red-600 dark:text-red-400';
+    return 'text-amber-600 dark:text-amber-400';
   }
 }

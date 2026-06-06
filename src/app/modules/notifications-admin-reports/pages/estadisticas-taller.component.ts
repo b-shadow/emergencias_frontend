@@ -136,6 +136,63 @@ import {
           </div>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" *ngIf="respuesta.estadisticas as est">
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Recibidas</div>
+            <div class="text-3xl font-bold text-slate-700 dark:text-slate-200 mt-2">{{ est.solicitudes_recibidas }}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Aceptación</div>
+            <div class="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{{ est.tasa_aceptacion | number : '1.0-2' }}%</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Calificación prom.</div>
+            <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-2">{{ est.calificacion_promedio ?? 'N/D' }}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">ETA cumplido</div>
+            <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-400 mt-2">{{ est.cumplimiento_eta_pct | number : '1.0-2' }}%</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Pagos confirmados</div>
+            <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ est.total_pagos_confirmados }}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Monto pagado</div>
+            <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{{ est.monto_total_pagado | number : '1.2-2' }}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Monto prom. pago</div>
+            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-2">{{ est.monto_promedio_pago | number : '1.2-2' }}</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
+            <div class="text-sm text-gray-600 dark:text-slate-400">Aceptadas</div>
+            <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">{{ est.solicitudes_aceptadas }}</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" *ngIf="respuesta.estadisticas as est">
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Servicios más realizados</h3>
+            <div *ngIf="!est.servicios_mas_realizados.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
+            <div *ngFor="let item of est.servicios_mas_realizados" class="flex justify-between text-sm py-1 border-b border-gray-100 dark:border-slate-700">
+              <span class="text-gray-700 dark:text-slate-300">{{ item.nombre }}</span>
+              <strong class="text-gray-900 dark:text-white">{{ item.cantidad }}</strong>
+            </div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Pagos</h3>
+            <div class="text-sm py-1 border-b border-gray-100 dark:border-slate-700 flex justify-between">
+              <span class="text-gray-700 dark:text-slate-300">Confirmados</span>
+              <strong class="text-gray-900 dark:text-white">{{ est.total_pagos_confirmados }}</strong>
+            </div>
+            <div class="text-sm py-1 border-b border-gray-100 dark:border-slate-700 flex justify-between">
+              <span class="text-gray-700 dark:text-slate-300">Promedio por pago</span>
+              <strong class="text-gray-900 dark:text-white">{{ est.monto_promedio_pago | number : '1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" *ngIf="respuesta.estadisticas as est">
           <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Incidentes por tipo</h3>
