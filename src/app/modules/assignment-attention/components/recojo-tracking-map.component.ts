@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 declare var maplibregl: any;
@@ -23,6 +23,8 @@ export class RecojoTrackingMapComponent implements AfterViewInit, OnChanges, OnD
   @Input() longitudDestino: number | null = null;
   @Input() rutaGeojson: any | null = null;
   @Input() rutaRecorridaGeojson: any | null = null;
+  @Input() etiquetaActual = 'Trabajador';
+  @Input() etiquetaDestino = 'Cliente';
   @ViewChild('mapEl') mapEl?: ElementRef<HTMLDivElement>;
 
   isLoading = true;
@@ -30,6 +32,8 @@ export class RecojoTrackingMapComponent implements AfterViewInit, OnChanges, OnD
   private workerMarker: any = null;
   private destinoMarker: any = null;
   private ready = false;
+
+  constructor(private cdr: ChangeDetectorRef) {}
 
   ngAfterViewInit(): void {
     this.loadMapLibre();
@@ -61,19 +65,43 @@ export class RecojoTrackingMapComponent implements AfterViewInit, OnChanges, OnD
       document.head.appendChild(css);
     }
 
+    const existingScript = document.querySelector('script[src*="maplibre-gl.js"]') as HTMLScriptElement | null;
+    if (existingScript) {
+      if ((window as any).maplibregl) {
+        this.initializeMap();
+      } else {
+        existingScript.addEventListener('load', () => this.initializeMap(), { once: true });
+        existingScript.addEventListener('error', () => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }, { once: true });
+      }
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/maplibre-gl@3.6.0/dist/maplibre-gl.js';
     script.async = true;
     script.onload = () => this.initializeMap();
     script.onerror = () => {
       this.isLoading = false;
+      this.cdr.detectChanges();
     };
     document.head.appendChild(script);
   }
 
   private initializeMap(): void {
+    if (this.map) {
+      this.ready = true;
+      this.isLoading = false;
+      this.renderData();
+      this.cdr.detectChanges();
+      return;
+    }
+
     if (!this.mapEl?.nativeElement) {
       this.isLoading = false;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -102,6 +130,7 @@ export class RecojoTrackingMapComponent implements AfterViewInit, OnChanges, OnD
       this.ready = true;
       this.isLoading = false;
       this.renderData();
+      this.cdr.detectChanges();
     });
   }
 
@@ -114,14 +143,14 @@ export class RecojoTrackingMapComponent implements AfterViewInit, OnChanges, OnD
     if (typeof this.longitudActual === 'number' && typeof this.latitudActual === 'number') {
       this.workerMarker = new maplibregl.Marker({ color: '#2563eb' })
         .setLngLat([this.longitudActual, this.latitudActual])
-        .setPopup(new maplibregl.Popup().setText('Trabajador'))
+        .setPopup(new maplibregl.Popup().setText(this.etiquetaActual))
         .addTo(this.map);
     }
 
     if (typeof this.longitudDestino === 'number' && typeof this.latitudDestino === 'number') {
       this.destinoMarker = new maplibregl.Marker({ color: '#dc2626' })
         .setLngLat([this.longitudDestino, this.latitudDestino])
-        .setPopup(new maplibregl.Popup().setText('Cliente'))
+        .setPopup(new maplibregl.Popup().setText(this.etiquetaDestino))
         .addTo(this.map);
     }
 
@@ -142,6 +171,7 @@ export class RecojoTrackingMapComponent implements AfterViewInit, OnChanges, OnD
         }
       });
     }
+
     const routeDone = this.normalizeRoute(this.rutaRecorridaGeojson);
     if (routeDone) {
       this.map.addSource('ruta-recorrida', { type: 'geojson', data: routeDone });
@@ -170,6 +200,8 @@ export class RecojoTrackingMapComponent implements AfterViewInit, OnChanges, OnD
     if (hasPoints) {
       this.map.fitBounds(bounds, { padding: 50, maxZoom: 15 });
     }
+
+    this.cdr.detectChanges();
   }
 
   private removeLayerAndSource(layerId: string, sourceId: string): void {

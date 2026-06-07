@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+﻿import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
@@ -25,13 +25,13 @@ import {
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div class="flex items-start gap-4">
           <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-cyan-100 to-sky-100 border border-sky-200/70 text-sky-600 flex items-center justify-center text-3xl">
-            👥
+            &#128101;
           </div>
           <div>
             <h1 class="text-5xl font-black tracking-tight text-slate-900 dark:text-white">Trabajadores</h1>
             <p class="text-2xl md:text-lg text-slate-600 dark:text-slate-400 mt-1">Gestiona el equipo de recojo de tu taller</p>
             <p *ngIf="tenantLabel" class="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl bg-sky-50 text-sky-700 text-sm border border-sky-100">
-              🏬 Tenant: {{ tenantLabel }}
+              &#127980; Tenant: {{ tenantLabel }}
             </p>
           </div>
         </div>
@@ -46,7 +46,7 @@ import {
 
       <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
         <div class="flex items-start gap-4 mb-5">
-          <div class="h-14 w-14 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-2xl">🧑‍🔧</div>
+          <div class="h-14 w-14 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-2xl">&#128295;</div>
           <div>
             <h2 class="text-4xl md:text-3xl font-black text-slate-900 dark:text-white">Nuevo trabajador</h2>
             <p class="text-slate-600 dark:text-slate-400 mt-1">Completa los datos para agregar un nuevo miembro al equipo.</p>
@@ -66,7 +66,7 @@ import {
 
           <label class="block">
             <span class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Contraseña</span>
-            <input [(ngModel)]="form.contrasena" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" autocapitalize="off" spellcheck="false" name="worker_password_create" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white" />
+            <input [(ngModel)]="form.contrasena" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" autocapitalize="off" spellcheck="false" name="worker_password_create" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white" />
           </label>
 
           <label class="block">
@@ -90,7 +90,7 @@ import {
       <section class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
           <div class="flex items-start gap-4">
-            <div class="h-14 w-14 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-2xl">📋</div>
+            <div class="h-14 w-14 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-2xl">&#128203;</div>
             <div>
               <h2 class="text-4xl md:text-3xl font-black text-slate-900 dark:text-white">Listado de trabajadores</h2>
               <p class="text-slate-600 dark:text-slate-400 mt-1">Consulta y administra los trabajadores registrados.</p>
@@ -116,7 +116,7 @@ import {
                 <div class="min-w-0">
                   <div class="text-3xl md:text-2xl font-black text-slate-900 dark:text-white truncate">{{ t.nombre_completo || 'Sin nombre' }}</div>
                   <div class="text-slate-600 dark:text-slate-400 truncate">{{ t.correo || '-' }}</div>
-                  <div class="text-slate-600 dark:text-slate-400">📞 {{ t.telefono || '-' }}</div>
+                  <div class="text-slate-600 dark:text-slate-400">&#128222; {{ t.telefono || '-' }}</div>
                 </div>
               </div>
 
@@ -159,7 +159,7 @@ import {
           </div>
           <div class="grid grid-cols-1 gap-3">
             <input [(ngModel)]="editForm.nombre_completo" placeholder="Nombre completo" class="px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white" />
-            <input [(ngModel)]="editForm.telefono" placeholder="Telefono" class="px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white" />
+            <input [(ngModel)]="editForm.telefono" placeholder="Teléfono" class="px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white" />
             <input [(ngModel)]="editForm.licencia_conducir" placeholder="Licencia" class="px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white" />
           </div>
           <div class="mt-4 flex justify-end gap-2">
@@ -200,18 +200,23 @@ export class WorkersComponent implements OnInit {
     licencia_conducir: '',
   };
 
-  constructor(private trabajadoresService: TrabajadoresService) {}
+  constructor(
+    private trabajadoresService: TrabajadoresService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.trabajadoresService.getMiTenant().subscribe({
       next: (ctx) => {
         this.tenantLabel = ctx?.slug_tenant || ctx?.nombre_tenant || '';
+        this.cdr.detectChanges();
       },
       error: () => {
         this.tenantLabel = '';
+        this.cdr.detectChanges();
       },
     });
-    queueMicrotask(() => this.cargar());
+    this.cargar();
   }
 
   get trabajadoresFiltrados(): TrabajadorItem[] {
@@ -231,16 +236,40 @@ export class WorkersComponent implements OnInit {
 
   cargar(): void {
     this.cargando = true;
-    this.trabajadoresService.listarTrabajadores().subscribe({
-      next: (data) => {
-        this.trabajadores = data || [];
-        this.cargando = false;
-      },
-      error: () => {
-        this.showToast('error', 'Error', 'No se pudo cargar el listado de trabajadores');
-        this.cargando = false;
-      },
-    });
+    this.trabajadoresService
+      .listarTrabajadores()
+      .pipe(
+        finalize(() => {
+          this.cargando = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (data: any) => {
+          if (Array.isArray(data)) {
+            this.trabajadores = data;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          if (Array.isArray(data?.items)) {
+            this.trabajadores = data.items;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          console.warn('Respuesta inesperada al listar trabajadores:', data);
+          this.trabajadores = [];
+          this.showToast('warning', 'Respuesta inesperada', 'Se recibió un formato no esperado al cargar trabajadores');
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error cargando trabajadores:', err);
+          this.trabajadores = [];
+          this.showToast('error', 'Error', 'No se pudo cargar el listado de trabajadores');
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   abrirModalEdicion(t: TrabajadorItem): void {
@@ -299,7 +328,11 @@ export class WorkersComponent implements OnInit {
 
   crear(): void {
     if (!this.form.nombre_completo || !this.form.correo || !this.form.contrasena) {
-      this.showToast('warning', 'Campos requeridos', 'Completa nombre, correo y contrasena');
+      this.showToast('warning', 'Campos requeridos', 'Completa nombre, correo y contraseña');
+      return;
+    }
+    if (this.form.contrasena.trim().length < 8) {
+      this.showToast('warning', 'Contraseña inválida', 'La contraseña debe tener al menos 8 caracteres');
       return;
     }
     this.guardando = true;
@@ -318,9 +351,38 @@ export class WorkersComponent implements OnInit {
       },
       error: (err) => {
         this.guardando = false;
-        this.showToast('error', 'No se pudo crear', err?.error?.detail || 'Error al crear trabajador');
+        const createError = this.getCreateError(err);
+        this.showToast('error', createError.title, createError.message);
       },
     });
+  }
+
+  private getCreateError(err: any): { title: string; message: string } {
+    const message = this.getErrorMessage(err, 'Error al crear trabajador');
+    if (message.toLowerCase().includes('correo') && message.toLowerCase().includes('registrado')) {
+      return {
+        title: 'Correo ya registrado',
+        message: 'Ese correo ya está en uso. Prueba con otro correo para el trabajador.',
+      };
+    }
+    return {
+      title: 'No se pudo crear',
+      message,
+    };
+  }
+
+  private getErrorMessage(err: any, fallback: string): string {
+    const detail = err?.error?.detail;
+    if (Array.isArray(detail) && detail.length > 0) {
+      const first = detail[0];
+      if (first?.msg) {
+        return first.msg;
+      }
+    }
+    if (typeof detail === 'string' && detail.trim()) {
+      return detail;
+    }
+    return fallback;
   }
 
   onNotificationClose(): void {
@@ -338,5 +400,9 @@ export class WorkersComponent implements OnInit {
     this.showNotification = true;
   }
 }
+
+
+
+
 
 

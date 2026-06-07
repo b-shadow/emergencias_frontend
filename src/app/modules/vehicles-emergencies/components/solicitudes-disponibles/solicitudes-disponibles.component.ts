@@ -22,7 +22,7 @@ import { takeUntil } from 'rxjs/operators';
           Solicitudes de Emergencia Disponibles
         </h1>
         <p class="text-sm mt-2 text-gray-600 dark:text-slate-400">
-          Selecciona una solicitud para analizar y postularte si deseas brindar atención
+          Selecciona una solicitud para analizar y postularte si deseas brindar atenciÃ³n
         </p>
       </div>
 
@@ -36,8 +36,8 @@ import { takeUntil } from 'rxjs/operators';
                 [ngClass]="isDarkMode
                   ? 'bg-slate-700 border-slate-600 text-white'
                   : 'bg-white border-gray-300 text-gray-900'">
-          <option value="recent">Más recientes</option>
-          <option value="oldest">Más antiguos</option>
+          <option value="recent">MÃ¡s recientes</option>
+          <option value="oldest">MÃ¡s antiguos</option>
         </select>
       </div>
 
@@ -59,7 +59,7 @@ import { takeUntil } from 'rxjs/operators';
       <div *ngIf="!isLoading && solicitudes.length === 0"
            class="p-8 text-center rounded-lg border-2 border-dashed"
            [ngClass]="isDarkMode ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-gray-50'">
-        <div class="text-5xl mb-3">??</div>
+        <div class="text-5xl mb-3">ðŸš¨</div>
         <h3 class="text-lg font-semibold" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
           No hay solicitudes disponibles
         </h3>
@@ -67,7 +67,7 @@ import { takeUntil } from 'rxjs/operators';
           No existen solicitudes de emergencia compatibles con tus especialidades en este momento.
         </p>
         <p class="text-xs mt-3" [ngClass]="isDarkMode ? 'text-slate-500' : 'text-gray-500'">
-          Intenta más tarde o actualiza tus especialidades y ubicación.
+          Intenta mÃ¡s tarde o actualiza tus especialidades y ubicaciÃ³n.
         </p>
       </div>
 
@@ -78,7 +78,7 @@ import { takeUntil } from 'rxjs/operators';
 
           <div class="flex items-start justify-between mb-3">
             <div>
-              <p class="text-xs font-medium mb-1" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Código</p>
+              <p class="text-xs font-medium mb-1" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Cdigo</p>
               <h3 class="font-bold text-lg" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
                 {{ solicitud.codigo_solicitud }}
               </h3>
@@ -100,7 +100,7 @@ import { takeUntil } from 'rxjs/operators';
                [ngClass]="isDarkMode ? 'bg-slate-600' : 'bg-gray-100'">
             <span class="flex items-center gap-1" [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
               <span class="material-icons text-base">calendar_month</span>
-              Fecha creación
+              Fecha creacin
             </span>
             <span class="font-bold" [ngClass]="isDarkMode ? 'text-white' : 'text-gray-900'">
               {{ formatFechaHora(solicitud.fecha_creacion) }}
@@ -129,7 +129,7 @@ import { takeUntil } from 'rxjs/operators';
           Anterior
         </button>
         <span class="text-sm" [ngClass]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-          Página {{ pageIndex + 1 }}
+          Pgina {{ pageIndex + 1 }}
         </span>
         <button (click)="changePage(1)"
                 class="px-4 py-2 rounded-lg transition-all"
@@ -264,6 +264,5 @@ export class SolicitudesDisponiblesComponent implements OnInit, OnDestroy {
     }
   }
 }
-
 
 

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -41,7 +41,7 @@ import { RecojoTrackingMapComponent } from '../components/recojo-tracking-map.co
           <select [(ngModel)]="seleccionTrabajador[idx]" class="px-3 py-2 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm">
             <option value="">Selecciona trabajador</option>
             <option *ngFor="let t of trabajadores" [value]="t.id_trabajador">
-              {{ t.id_trabajador.slice(0, 8) }} - {{ t.telefono || '-' }}
+              {{ t.nombre_completo || t.id_trabajador.slice(0, 8) }}{{ t.telefono ? ' - ' + t.telefono : '' }}
             </option>
           </select>
           <button
@@ -50,6 +50,22 @@ import { RecojoTrackingMapComponent } from '../components/recojo-tracking-map.co
           >
             Asignar recojo
           </button>
+        </div>
+
+        <div *ngIf="!a.tracking && a.previewRouteGeojson && a.taller?.latitud != null && a.taller?.longitud != null && a.solicitud?.latitud != null && a.solicitud?.longitud != null" class="space-y-2">
+          <div class="text-sm text-gray-700 dark:text-slate-300">
+            Tramo estimado: <strong>{{ (a.previewDistanceMeters || 0) | number:'1.0-0' }} m</strong> -
+            ETA: <strong>{{ ((a.previewDurationSeconds || 0) / 60) | number:'1.0-0' }} min</strong>
+          </div>
+          <app-recojo-tracking-map
+            [latitudActual]="a.taller.latitud"
+            [longitudActual]="a.taller.longitud"
+            [latitudDestino]="a.solicitud.latitud"
+            [longitudDestino]="a.solicitud.longitud"
+            [rutaGeojson]="a.previewRouteGeojson"
+            [etiquetaActual]="'Taller'"
+            [etiquetaDestino]="'Cliente'"
+          />
         </div>
 
         <div *ngIf="a.tracking" class="text-sm text-gray-700 dark:text-slate-300">
@@ -61,8 +77,8 @@ import { RecojoTrackingMapComponent } from '../components/recojo-tracking-map.co
           <app-recojo-tracking-map
             [latitudActual]="a.tracking.latitud_actual"
             [longitudActual]="a.tracking.longitud_actual"
-            [latitudDestino]="a.tracking.latitud_destino || a.solicitud?.latitud_cliente"
-            [longitudDestino]="a.tracking.longitud_destino || a.solicitud?.longitud_cliente"
+            [latitudDestino]="a.tracking.latitud_destino || a.solicitud?.latitud"
+            [longitudDestino]="a.tracking.longitud_destino || a.solicitud?.longitud"
             [rutaGeojson]="a.tracking.ruta_geojson"
             [rutaRecorridaGeojson]="a.tracking.ruta_recorrida_geojson"
           />
@@ -82,6 +98,7 @@ export class TrackingRecojoComponent implements OnInit, OnDestroy {
   constructor(
     private asignacionesService: AsignacionesService,
     private trabajadoresService: TrabajadoresService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -97,10 +114,15 @@ export class TrackingRecojoComponent implements OnInit, OnDestroy {
   }
 
   cargarBase(): void {
-    this.trabajadoresService.listarTrabajadores().subscribe((t) => (this.trabajadores = t || []));
-    this.asignacionesService.obtenerAsignacionesActivas().subscribe((rows) => {
-      this.asignaciones = Array.isArray(rows) ? rows : [];
+    this.trabajadoresService.listarTrabajadores().subscribe((t) => {
+      this.trabajadores = t || [];
+      this.cdr.detectChanges();
+    });
+    this.asignacionesService.obtenerAsignacionesActivas().subscribe((rows: any) => {
+      this.asignaciones = Array.isArray(rows) ? rows : (rows?.data || []);
+      this.asignaciones.forEach((a) => this.prepararVistaPrevia(a));
       this.refrescarTracking();
+      this.cdr.detectChanges();
     });
   }
 
@@ -124,14 +146,20 @@ export class TrackingRecojoComponent implements OnInit, OnDestroy {
                     : trk.ruta_recorrida_geojson || null,
               }
             : null;
+          if (!a.tracking) {
+            this.prepararVistaPrevia(a);
+          }
           if (a.tracking) {
             solicitudesConTracking.add(idSolicitud);
             this.ensureSocketForSolicitud(a, idSolicitud);
           }
+          this.cdr.detectChanges();
         },
         error: () => {
           a.tracking = null;
+          this.prepararVistaPrevia(a);
           this.closeSocketForSolicitud(idSolicitud);
+          this.cdr.detectChanges();
         },
       });
     });
@@ -158,8 +186,10 @@ export class TrackingRecojoComponent implements OnInit, OnDestroy {
               ? JSON.parse(payload.ruta_recorrida_geojson)
               : payload.ruta_recorrida_geojson || null,
         };
+        this.cdr.detectChanges();
       } catch {
         a.tracking = null;
+        this.cdr.detectChanges();
       }
     };
 
@@ -201,5 +231,38 @@ export class TrackingRecojoComponent implements OnInit, OnDestroy {
     this.trabajadoresService.asignarOrdenRecojo(idAsignacion, idTrabajador).subscribe(() => {
       this.refrescarTracking();
     });
+  }
+
+  private prepararVistaPrevia(asignacion: any): void {
+    const origenLat = asignacion?.taller?.latitud;
+    const origenLng = asignacion?.taller?.longitud;
+    const destinoLat = asignacion?.solicitud?.latitud;
+    const destinoLng = asignacion?.solicitud?.longitud;
+
+    if (![origenLat, origenLng, destinoLat, destinoLng].every((v) => Number.isFinite(v))) {
+      asignacion.previewRouteGeojson = null;
+      asignacion.previewDistanceMeters = null;
+      asignacion.previewDurationSeconds = null;
+      return;
+    }
+
+    const url = `https://router.project-osrm.org/route/v1/driving/${origenLng},${origenLat};${destinoLng},${destinoLat}?overview=full&geometries=geojson&alternatives=false&steps=false`;
+    fetch(url)
+      .then((resp) => (resp.ok ? resp.json() : Promise.reject(resp)))
+      .then((resp) => {
+        const route = resp?.routes?.[0];
+        asignacion.previewDistanceMeters = Number(route?.distance || 0);
+        asignacion.previewDurationSeconds = Number(route?.duration || 0);
+        asignacion.previewRouteGeojson = route?.geometry
+          ? { type: 'Feature', geometry: route.geometry, properties: {} }
+          : null;
+        this.cdr.detectChanges();
+      })
+      .catch(() => {
+        asignacion.previewRouteGeojson = null;
+        asignacion.previewDistanceMeters = null;
+        asignacion.previewDurationSeconds = null;
+        this.cdr.detectChanges();
+      });
   }
 }

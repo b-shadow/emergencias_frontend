@@ -94,7 +94,7 @@ import { EstadisticasTallerService, EstadisticasTallerResponse } from '@core/ser
         </div>
 
         <div *ngIf="isTaller" class="mb-12 space-y-8">
-          <ng-container *ngIf="tallerStats?.estadisticas as est; else tallerSinDatos">
+          <ng-container *ngIf="tallerStats.estadisticas as est; else tallerSinDatos">
             <div>
               <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">KPIs del Taller</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

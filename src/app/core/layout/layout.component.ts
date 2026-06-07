@@ -405,7 +405,9 @@ export class LayoutComponent implements OnInit {
     if (this.authService.isTaller()) {
       this.workshopService.getMyTenantContext().subscribe({
         next: (ctx) => {
-          this.tenantLabel = ctx?.slug_tenant || ctx?.nombre_tenant || '';
+          queueMicrotask(() => {
+            this.tenantLabel = ctx?.slug_tenant || ctx?.nombre_tenant || '';
+          });
         },
       });
       return;
@@ -414,7 +416,9 @@ export class LayoutComponent implements OnInit {
     if (this.authService.isTrabajador()) {
       this.trabajadoresService.getMiTenant().subscribe({
         next: (ctx) => {
-          this.tenantLabel = ctx?.slug_tenant || ctx?.nombre_tenant || '';
+          queueMicrotask(() => {
+            this.tenantLabel = ctx?.slug_tenant || ctx?.nombre_tenant || '';
+          });
         },
       });
     }
