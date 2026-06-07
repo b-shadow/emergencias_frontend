@@ -35,6 +35,12 @@ export class AsignacionesService {
     );
   }
 
+  obtenerAsignacionesConAtendidas(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/activas`, {
+      params: { incluir_atendidas: 'true' }
+    });
+  }
+
   /**
    * Obtiene el detalle de una asignación específica
    */

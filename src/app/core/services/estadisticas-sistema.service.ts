@@ -109,6 +109,22 @@ export interface OpcionesFiltrosSistema {
   talleres: OpcionTallerSistema[];
 }
 
+export interface ColumnaReporteConsultaSistema {
+  key: string;
+  label: string;
+}
+
+export interface ReporteConsultaSistemaResponse {
+  consulta_original: string;
+  tipo_reporte: string;
+  titulo: string;
+  descripcion?: string | null;
+  columnas: ColumnaReporteConsultaSistema[];
+  filas: Record<string, string | number | boolean | null>[];
+  total_registros: number;
+  mensaje?: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -156,6 +172,13 @@ export class EstadisticasSistemaService {
     return this.http.get<EstadisticasGeneralesResponse>(
       `${this.apiUrl}/estadisticas-sistema`,
       { params }
+    );
+  }
+
+  generarReporteConsulta(consulta: string): Observable<ReporteConsultaSistemaResponse> {
+    return this.http.post<ReporteConsultaSistemaResponse>(
+      `${this.apiUrl}/reportes-consulta`,
+      { consulta }
     );
   }
 }

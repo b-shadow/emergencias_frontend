@@ -1,452 +1,595 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { debounceTime, takeUntil } from 'rxjs/operators';
-import { NgChartsModule } from 'ng2-charts';
+import { finalize } from 'rxjs/operators';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import {
-  EstadisticasTallerResponse,
+  ColumnaReporteTaller,
   EstadisticasTallerService,
-  OpcionesFiltrosTaller,
+  ReporteConsultaTallerResponse,
 } from '@core/services/estadisticas-taller.service';
+
+interface SpeechRecognitionResultLike {
+  0: { transcript: string };
+  isFinal: boolean;
+  length: number;
+}
+
+interface SpeechRecognitionEventLike extends Event {
+  results: {
+    [index: number]: SpeechRecognitionResultLike;
+    length: number;
+  };
+}
+
+interface SpeechRecognitionLike extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: Event & { error?: string }) => void) | null;
+  onend: (() => void) | null;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+type ReportCellValue = string | number | boolean | null;
 
 @Component({
   selector: 'app-estadisticas-taller',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgChartsModule],
+  imports: [CommonModule, FormsModule],
   template: `
-    <div class="px-6 py-4 space-y-6">
-      <div>
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 text-transparent bg-clip-text mb-2">
-          Reportes del Taller
-        </h1>
-        <p class="text-gray-600 dark:text-slate-400">Reportes por filtros de operaciones del taller</p>
-      </div>
+    <div class="space-y-6 text-slate-900 dark:text-white">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div class="flex items-start gap-4">
+          <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
+            <span class="material-icons text-4xl">bar_chart</span>
+          </div>
+          <div>
+            <h1 class="text-4xl font-black tracking-tight">Reportes del Taller</h1>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+              Crea y consulta reportes personalizados de la información de tu taller.
+            </p>
+          </div>
+        </div>
 
-      <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Filtros</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Fecha inicio</label>
-            <input type="date" [(ngModel)]="filtros.fechaInicio" (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Fecha fin</label>
-            <input type="date" [(ngModel)]="filtros.fechaFin" (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Agrupar por</label>
-            <select [(ngModel)]="filtros.agruparPor" (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
-              <option value="dia">Dia</option>
-              <option value="semana">Semana</option>
-              <option value="mes">Mes</option>
-              <option value="categoria">Categoria</option>
-              <option value="urgencia">Urgencia</option>
-              <option value="estado_solicitud">Estado solicitud</option>
-              <option value="estado_asignacion">Estado asignacion</option>
-              <option value="estado_resultado">Estado resultado</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Urgencia</label>
-            <select [(ngModel)]="filtros.nivelUrgencia" (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
-              <option value="">Todas</option>
-              <option *ngFor="let item of opciones.urgencias" [value]="item">{{ item }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Estado solicitud</label>
-            <select [(ngModel)]="filtros.estadoSolicitud" (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
-              <option value="">Todos</option>
-              <option *ngFor="let item of opciones.estados_solicitud" [value]="item">{{ item }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Estado asignacion</label>
-            <select [(ngModel)]="filtros.estadoAsignacion" (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
-              <option value="">Todos</option>
-              <option *ngFor="let item of opciones.estados_asignacion" [value]="item">{{ item }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Estado resultado</label>
-            <select [(ngModel)]="filtros.estadoResultado" (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
-              <option value="">Todos</option>
-              <option *ngFor="let item of opciones.estados_resultado" [value]="item">{{ item }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Categoria</label>
-            <select [(ngModel)]="filtros.categoriaIncidente" (change)="aplicarFiltros()"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
-              <option value="">Todas</option>
-              <option *ngFor="let item of opciones.categorias_incidente" [value]="item">{{ item }}</option>
-            </select>
-          </div>
-          <div class="flex items-end gap-2">
-            <button (click)="cargarEstadisticas()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
-              Actualizar
+        <div class="relative">
+          <button
+            type="button"
+            (click)="toggleExportMenu($event)"
+            [disabled]="!reporte || !reporte.filas.length"
+            class="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-blue-300 dark:hover:bg-slate-700"
+          >
+            <span class="material-icons text-base">ios_share</span>
+            <span>Exportar</span>
+            <span class="material-icons text-base">expand_more</span>
+          </button>
+
+          <div
+            *ngIf="showExportMenu"
+            (click)="$event.stopPropagation()"
+            class="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800"
+          >
+            <button type="button" (click)="exportarCsv()" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
+              <span class="material-icons text-base">table_view</span>
+              <span>Exportar CSV</span>
             </button>
-            <button (click)="limpiarFiltros()" class="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg">
-              Reset
+            <button type="button" (click)="exportarPdf()" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
+              <span class="material-icons text-base">picture_as_pdf</span>
+              <span>Exportar PDF</span>
+            </button>
+            <button type="button" (click)="exportarHtml()" class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700">
+              <span class="material-icons text-base">language</span>
+              <span>Exportar HTML</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div *ngIf="cargando" class="text-center py-10 text-gray-500 dark:text-slate-400">Cargando reportes...</div>
-      <div *ngIf="error" class="p-4 rounded-lg border border-red-300 bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-200">{{ error }}</div>
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-[2.1fr_0.9fr]">
+        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="mb-5 flex items-start gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+              <span class="material-icons">note_add</span>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold">Generar nuevo reporte</h2>
+              <p class="text-sm text-slate-600 dark:text-slate-400">
+                Describe qué información necesitas y genera tu reporte al instante.
+              </p>
+            </div>
+          </div>
 
-      <div *ngIf="!cargando && respuesta" class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" *ngIf="respuesta.estadisticas as est">
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Solicitudes atendidas</div>
-            <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">{{ est.total_solicitudes_atendidas }}</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Canceladas</div>
-            <div class="text-3xl font-bold text-red-600 dark:text-red-400 mt-2">{{ est.total_solicitudes_canceladas }}</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Servicios completados</div>
-            <div class="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{{ est.total_servicios_completados }}</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Tasa completacion</div>
-            <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{{ est.tasa_completacion | number : '1.0-2' }}%</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Tiempo prom. asignacion</div>
-            <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-400 mt-2">{{ est.tiempo_promedio_asignacion_minutos | number : '1.0-1' }} min</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Tiempo prom. llegada</div>
-            <div class="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-2">{{ est.tiempo_promedio_llegada_minutos | number : '1.0-1' }} min</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Zona con mas incidentes</div>
-            <div class="text-xl font-bold text-slate-700 dark:text-slate-200 mt-2">{{ est.zona_mas_incidentes || 'N/D' }}</div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" *ngIf="respuesta.estadisticas as est">
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Recibidas</div>
-            <div class="text-3xl font-bold text-slate-700 dark:text-slate-200 mt-2">{{ est.solicitudes_recibidas }}</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Aceptación</div>
-            <div class="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{{ est.tasa_aceptacion | number : '1.0-2' }}%</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Calificación prom.</div>
-            <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-2">{{ est.calificacion_promedio ?? 'N/D' }}</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">ETA cumplido</div>
-            <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-400 mt-2">{{ est.cumplimiento_eta_pct | number : '1.0-2' }}%</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Pagos confirmados</div>
-            <div class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ est.total_pagos_confirmados }}</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Monto pagado</div>
-            <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{{ est.monto_total_pagado | number : '1.2-2' }}</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Monto prom. pago</div>
-            <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-2">{{ est.monto_promedio_pago | number : '1.2-2' }}</div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-5">
-            <div class="text-sm text-gray-600 dark:text-slate-400">Aceptadas</div>
-            <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">{{ est.solicitudes_aceptadas }}</div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" *ngIf="respuesta.estadisticas as est">
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Servicios más realizados</h3>
-            <div *ngIf="!est.servicios_mas_realizados.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
-            <div *ngFor="let item of est.servicios_mas_realizados" class="flex justify-between text-sm py-1 border-b border-gray-100 dark:border-slate-700">
-              <span class="text-gray-700 dark:text-slate-300">{{ item.nombre }}</span>
-              <strong class="text-gray-900 dark:text-white">{{ item.cantidad }}</strong>
-            </div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Pagos</h3>
-            <div class="text-sm py-1 border-b border-gray-100 dark:border-slate-700 flex justify-between">
-              <span class="text-gray-700 dark:text-slate-300">Confirmados</span>
-              <strong class="text-gray-900 dark:text-white">{{ est.total_pagos_confirmados }}</strong>
-            </div>
-            <div class="text-sm py-1 border-b border-gray-100 dark:border-slate-700 flex justify-between">
-              <span class="text-gray-700 dark:text-slate-300">Promedio por pago</span>
-              <strong class="text-gray-900 dark:text-white">{{ est.monto_promedio_pago | number : '1.2-2' }}</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" *ngIf="respuesta.estadisticas as est">
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Incidentes por tipo</h3>
-            <div *ngIf="!est.incidentes_por_tipo.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
-            <div *ngFor="let item of est.incidentes_por_tipo" class="flex justify-between text-sm py-1 border-b border-gray-100 dark:border-slate-700">
-              <span class="text-gray-700 dark:text-slate-300">{{ item.tipo }}</span>
-              <strong class="text-gray-900 dark:text-white">{{ item.cantidad }}</strong>
-            </div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Cancelaciones por tipo</h3>
-            <div *ngIf="!est.cancelaciones_por_tipo.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
-            <div *ngFor="let item of est.cancelaciones_por_tipo" class="flex justify-between text-sm py-1 border-b border-gray-100 dark:border-slate-700">
-              <span class="text-gray-700 dark:text-slate-300">{{ item.motivo }}</span>
-              <strong class="text-gray-900 dark:text-white">{{ item.cantidad }}</strong>
-            </div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Eficiencia por servicio</h3>
-            <div *ngIf="!est.eficiencia_por_servicio.length" class="text-gray-500 dark:text-slate-400 text-sm">Sin datos</div>
-            <div *ngFor="let item of est.eficiencia_por_servicio" class="py-2 border-b border-gray-100 dark:border-slate-700">
-              <div class="flex justify-between text-sm">
-                <span class="text-gray-700 dark:text-slate-300">{{ item.servicio }}</span>
-                <strong class="text-gray-900 dark:text-white">{{ item.tasa_completacion | number : '1.0-2' }}%</strong>
+          <div class="space-y-4">
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 shadow-inner dark:border-slate-700 dark:bg-slate-950/60">
+              <textarea
+                [(ngModel)]="consulta"
+                rows="4"
+                maxlength="500"
+                placeholder="Ejemplo: ver todas las órdenes finalizadas del mes"
+                class="min-h-[126px] w-full resize-none bg-transparent px-5 py-4 text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              ></textarea>
+              <div class="flex justify-end border-t border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                {{ consulta.length }}/500
               </div>
-              <div class="text-xs text-gray-500 dark:text-slate-400">{{ item.categoria_tarifa }} · {{ item.completados }}/{{ item.total }}</div>
             </div>
+
+            <div class="flex flex-col gap-3 xl:flex-row xl:items-start">
+              <div class="flex items-center gap-3 pt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+                <span>Ejemplos:</span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  *ngFor="let ejemplo of ejemplosRapidos"
+                  type="button"
+                  (click)="usarEjemplo(ejemplo)"
+                  class="rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-blue-300 dark:hover:bg-slate-700"
+                >
+                  {{ ejemplo.etiqueta }}
+                </button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 pt-1">
+              <button
+                type="button"
+                (click)="limpiarTodo()"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                <span class="material-icons text-base">delete</span>
+                <span>Limpiar</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="generarReporte()"
+                [disabled]="cargando || !consulta.trim()"
+                class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:from-blue-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span class="material-icons text-base">play_arrow</span>
+                <span>{{ cargando ? 'Generando reporte...' : 'Generar reporte' }}</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="toggleEscucha()"
+                class="inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition"
+                [ngClass]="escuchando
+                  ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'"
+              >
+                <span class="material-icons text-base">{{ escuchando ? 'stop_circle' : 'keyboard_voice' }}</span>
+                <span>{{ escuchando ? 'Detener voz' : 'Grabar voz' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="estadoVoz" class="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300">
+            {{ estadoVoz }}
+          </div>
+          <div *ngIf="error" class="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+            {{ error }}
+          </div>
+        </section>
+
+        <aside class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="mb-5 flex items-start gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+              <span class="material-icons">tips_and_updates</span>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold">Consejos</h2>
+            </div>
+          </div>
+
+          <div class="space-y-5 pt-3">
+            <div *ngFor="let consejo of consejos" class="flex items-start gap-3">
+              <span class="material-icons mt-0.5 text-blue-600 dark:text-blue-400">check_circle</span>
+              <p class="text-sm text-slate-700 dark:text-slate-300">{{ consejo }}</p>
+            </div>
+          </div>
+
+          <div class="mt-10 flex justify-end">
+            <div class="rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 p-4 text-blue-500 shadow-inner dark:from-slate-800 dark:to-slate-800 dark:text-blue-400">
+              <span class="material-icons text-5xl">auto_awesome</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <section *ngIf="reporte" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div class="mb-3 flex items-start gap-3">
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+                <span class="material-icons">visibility</span>
+              </div>
+              <div>
+                <h2 class="text-2xl font-bold">Campos del reporte</h2>
+                <p class="text-sm text-slate-600 dark:text-slate-400">
+                  Selecciona los campos que deseas incluir en el reporte.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="button"
+              (click)="restablecerColumnas()"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              <span class="material-icons text-base">restart_alt</span>
+              <span>Restablecer</span>
+            </button>
+            <button
+              type="button"
+              (click)="mostrarTodasLasColumnas()"
+              class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:from-blue-700 hover:to-indigo-700"
+            >
+              <span class="material-icons text-base">visibility</span>
+              <span>Mostrar todo</span>
+            </button>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Reporte tabular</h3>
-            <div class="flex gap-2" *ngIf="respuesta.reporte && respuesta.reporte.tabla.length > 0">
-              <button (click)="exportarCsv()" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium">Exportar CSV</button>
-              <button (click)="exportarHtml()" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium">Exportar HTML</button>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <label
+            *ngFor="let columna of columnasConfigurables"
+            class="inline-flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition"
+            [ngClass]="columna.visible
+              ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300'
+              : 'border-slate-200 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'"
+          >
+            <input
+              type="checkbox"
+              [checked]="columna.visible"
+              (change)="toggleColumna(columna.key)"
+              class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span>{{ columna.label }}</span>
+          </label>
+        </div>
+      </section>
+
+      <section *ngIf="reporte" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div class="mb-3 flex items-start gap-3">
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+                <span class="material-icons">list_alt</span>
+              </div>
+              <div>
+                <h2 class="text-2xl font-bold">Resultados del reporte</h2>
+                <p class="text-sm text-slate-600 dark:text-slate-400">{{ reporte.descripcion || 'Resultado generado a partir de tu consulta.' }}</p>
+              </div>
+            </div>
+            <div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              Consulta: “{{ reporte.consulta_original }}”
             </div>
           </div>
-
-          <div *ngIf="!respuesta.reporte || respuesta.reporte.tabla.length === 0" class="text-gray-500 dark:text-slate-400">
-            No hay registros para los filtros aplicados.
+          <div class="text-sm font-semibold text-slate-600 dark:text-slate-300">
+            {{ reporte.total_registros }} registro(s)
           </div>
+        </div>
 
-          <div *ngIf="respuesta.reporte && respuesta.reporte.tabla.length > 0" class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-gray-200 dark:border-slate-700 text-left text-gray-700 dark:text-slate-300">
-                  <th class="py-2 pr-4">Grupo</th>
-                  <th class="py-2 pr-4">Total</th>
-                  <th class="py-2 pr-4">Atendidas</th>
-                  <th class="py-2 pr-4">Canceladas</th>
-                  <th class="py-2 pr-4">Completadas</th>
-                  <th class="py-2 pr-4">Tasa %</th>
+        <div *ngIf="reporte.mensaje" class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+          {{ reporte.mensaje }}
+        </div>
+
+        <div *ngIf="!reporte.filas.length" class="rounded-2xl border border-dashed border-slate-200 px-6 py-12 text-center dark:border-slate-700">
+          <span class="material-icons text-5xl text-slate-400 dark:text-slate-500">table_rows</span>
+          <h3 class="mt-4 text-lg font-semibold">No hay resultados para mostrar</h3>
+          <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Prueba afinando la consulta o usando un ejemplo más específico.
+          </p>
+        </div>
+
+        <div *ngIf="reporte.filas.length" class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-slate-50 dark:bg-slate-800/80">
+                <tr>
+                  <th
+                    *ngFor="let columna of columnasVisibles"
+                    class="whitespace-nowrap px-4 py-4 text-left font-semibold text-slate-600 dark:text-slate-300"
+                  >
+                    {{ columna.label }}
+                  </th>
+                  <th class="px-4 py-4 text-right font-semibold text-slate-600 dark:text-slate-300">⋮</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let item of respuesta.reporte.tabla" class="border-b border-gray-100 dark:border-slate-800">
-                  <td class="py-2 pr-4 font-medium text-gray-900 dark:text-white">{{ item.grupo }}</td>
-                  <td class="py-2 pr-4">{{ item.total_solicitudes }}</td>
-                  <td class="py-2 pr-4">{{ item.solicitudes_atendidas }}</td>
-                  <td class="py-2 pr-4">{{ item.solicitudes_canceladas }}</td>
-                  <td class="py-2 pr-4">{{ item.servicios_completados }}</td>
-                  <td class="py-2 pr-4">{{ item.tasa_completacion | number : '1.0-2' }}</td>
+                <tr
+                  *ngFor="let fila of filasPaginadas; let i = index"
+                  class="border-t border-slate-100 transition hover:bg-slate-50/70 dark:border-slate-800 dark:hover:bg-slate-800/60"
+                >
+                  <td
+                    *ngFor="let columna of columnasVisibles"
+                    class="whitespace-nowrap px-4 py-4 text-slate-700 dark:text-slate-200"
+                  >
+                    <ng-container [ngSwitch]="columna.key">
+                      <span
+                        *ngSwitchCase="'activo'"
+                        class="inline-flex rounded-xl px-3 py-1 text-xs font-semibold"
+                        [ngClass]="formatearValor(fila[columna.key]) === 'Sí'
+                          ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:ring-emerald-900/50'
+                          : 'bg-slate-100 text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700'"
+                      >
+                        {{ formatearValor(fila[columna.key]) }}
+                      </span>
+                      <span *ngSwitchDefault>{{ formatearValor(fila[columna.key]) }}</span>
+                    </ng-container>
+                  </td>
+                  <td class="px-4 py-4 text-right text-slate-400 dark:text-slate-500">⋮</td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" *ngIf="respuesta.reporte && respuesta.reporte.tabla.length > 0">
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Solicitudes por grupo</h3>
-            <div style="position: relative; width: 100%; height: 280px;">
-              <canvas baseChart [data]="reporteBarrasChart.data" [options]="reporteBarrasChart.options" [type]="'bar'"></canvas>
+          <div class="flex flex-col gap-4 border-t border-slate-200 px-4 py-4 text-sm dark:border-slate-700 lg:flex-row lg:items-center lg:justify-between">
+            <div class="text-slate-600 dark:text-slate-400">
+              Mostrando {{ rangoDesde }} a {{ rangoHasta }} de {{ reporte.total_registros }} registros
             </div>
-          </div>
-          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-gray-200 dark:border-slate-700 p-6">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Servicios completados</h3>
-            <div style="position: relative; width: 100%; height: 280px;">
-              <canvas baseChart [data]="reporteCompletacionChart.data" [options]="reporteCompletacionChart.options" [type]="'doughnut'"></canvas>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="paginaAnterior()"
+                [disabled]="paginaActual === 1"
+                class="rounded-xl border border-slate-200 px-4 py-2 font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Anterior
+              </button>
+              <div class="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 font-semibold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300">
+                {{ paginaActual }}
+              </div>
+              <button
+                type="button"
+                (click)="paginaSiguiente()"
+                [disabled]="paginaActual >= totalPaginas"
+                class="rounded-xl border border-slate-200 px-4 py-2 font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Siguiente
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   `,
 })
-export class EstadisticasTallerComponent implements OnInit, OnDestroy {
-  respuesta: EstadisticasTallerResponse | null = null;
+export class EstadisticasTallerComponent implements OnDestroy {
+  consulta = '';
   cargando = false;
   error: string | null = null;
-
-  opciones: OpcionesFiltrosTaller = {
-    urgencias: [],
-    categorias_incidente: [],
-    estados_solicitud: [],
-    estados_asignacion: [],
-    estados_resultado: [],
-  };
-
-  filtros = {
-    fechaInicio: '',
-    fechaFin: '',
-    agruparPor: 'dia',
-    nivelUrgencia: '',
-    categoriaIncidente: '',
-    estadoSolicitud: '',
-    estadoAsignacion: '',
-    estadoResultado: '',
-  };
-
-  reporteBarrasChart: any = { data: {}, options: {} };
-  reporteCompletacionChart: any = { data: {}, options: {} };
-
-  private destroy$ = new Subject<void>();
-  private filtrosChange$ = new Subject<void>();
+  estadoVoz: string | null = null;
+  escuchando = false;
+  reporte: ReporteConsultaTallerResponse | null = null;
+  columnasConfigurables: Array<ColumnaReporteTaller & { visible: boolean }> = [];
+  showExportMenu = false;
+  paginaActual = 1;
+  readonly pageSize = 8;
+  readonly consejos = [
+    'Sé específico en tu solicitud.',
+    'Incluye filtros como fechas o estados.',
+    'Usa ejemplos como referencia.',
+  ];
+  readonly ejemplosRapidos = [
+    { etiqueta: 'Órdenes por fecha', consulta: 'quiero ver todas las órdenes finalizadas' },
+    { etiqueta: 'Órdenes finalizadas', consulta: 'quiero ver todas las órdenes finalizadas' },
+    { etiqueta: 'Servicios realizados', consulta: 'quiero ver los servicios realizados' },
+    { etiqueta: 'Usuarios de empresa', consulta: 'quiero ver todos los usuarios de la empresa' },
+    { etiqueta: 'Pagos pendientes', consulta: 'quiero ver los pagos pendientes' },
+  ];
+  private recognition: SpeechRecognitionLike | null = null;
 
   constructor(
     private estadisticasService: EstadisticasTallerService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit(): void {
-    this.inicializarFechas();
-    this.cargarEstadisticas();
-    this.filtrosChange$.pipe(debounceTime(500), takeUntil(this.destroy$)).subscribe(() => this.cargarEstadisticas());
+  get columnasVisibles(): Array<ColumnaReporteTaller & { visible: boolean }> {
+    return this.columnasConfigurables.filter((columna) => columna.visible);
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  get totalPaginas(): number {
+    if (!this.reporte?.filas.length) {
+      return 1;
+    }
+    return Math.max(1, Math.ceil(this.reporte.filas.length / this.pageSize));
   }
 
-  inicializarFechas(): void {
-    const hoy = new Date();
-    const hace30Dias = new Date(hoy.getTime() - 30 * 24 * 60 * 60 * 1000);
-    this.filtros.fechaFin = this.formatoFecha(hoy);
-    this.filtros.fechaInicio = this.formatoFecha(hace30Dias);
+  get filasPaginadas(): Record<string, ReportCellValue>[] {
+    if (!this.reporte?.filas.length) {
+      return [];
+    }
+    const inicio = (this.paginaActual - 1) * this.pageSize;
+    return this.reporte.filas.slice(inicio, inicio + this.pageSize);
   }
 
-  formatoFecha(fecha: Date): string {
-    return fecha.toISOString().split('T')[0];
+  get rangoDesde(): number {
+    if (!this.reporte?.filas.length) {
+      return 0;
+    }
+    return (this.paginaActual - 1) * this.pageSize + 1;
   }
 
-  aplicarFiltros(): void {
-    this.filtrosChange$.next();
+  get rangoHasta(): number {
+    if (!this.reporte?.filas.length) {
+      return 0;
+    }
+    return Math.min(this.paginaActual * this.pageSize, this.reporte.filas.length);
   }
 
-  limpiarFiltros(): void {
-    this.inicializarFechas();
-    this.filtros.agruparPor = 'dia';
-    this.filtros.nivelUrgencia = '';
-    this.filtros.categoriaIncidente = '';
-    this.filtros.estadoSolicitud = '';
-    this.filtros.estadoAsignacion = '';
-    this.filtros.estadoResultado = '';
-    this.cargarEstadisticas();
-  }
+  generarReporte(): void {
+    const consulta = this.consulta.trim();
+    if (!consulta) {
+      this.error = 'Escribe o dicta una consulta antes de generar el reporte.';
+      return;
+    }
 
-  cargarEstadisticas(): void {
     this.cargando = true;
     this.error = null;
+    this.showExportMenu = false;
 
     this.estadisticasService
-      .obtenerMisEstadisticas(
-        this.filtros.fechaInicio,
-        this.filtros.fechaFin,
-        this.filtros.agruparPor,
-        this.filtros.nivelUrgencia || undefined,
-        this.filtros.categoriaIncidente || undefined,
-        this.filtros.estadoSolicitud || undefined,
-        this.filtros.estadoAsignacion || undefined,
-        this.filtros.estadoResultado || undefined
-      )
-      .pipe(takeUntil(this.destroy$))
+      .generarReporteConsulta(consulta)
+      .pipe(finalize(() => {
+        this.cargando = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
-        next: (data) => {
-          this.respuesta = data;
-          this.opciones = data.opciones_filtros || this.opciones;
-          this.sincronizarFiltrosConOpciones();
-          this.cargando = false;
-          this.setupReporteCharts();
-          this.cdr.markForCheck();
+        next: (respuesta) => {
+          this.reporte = respuesta;
+          this.paginaActual = 1;
+          this.columnasConfigurables = (respuesta.columnas || []).map((columna) => ({
+            ...columna,
+            visible: true,
+          }));
+          if (!respuesta.columnas.length && respuesta.filas.length) {
+            this.columnasConfigurables = Object.keys(respuesta.filas[0]).map((key) => ({
+              key,
+              label: this.formatearEtiquetaColumna(key),
+              visible: true,
+            }));
+          }
         },
         error: () => {
-          this.error = 'Error al cargar reportes del taller';
-          this.cargando = false;
-          this.cdr.markForCheck();
+          this.error = 'No pudimos generar el reporte. Intenta de nuevo en unos segundos.';
         },
       });
   }
 
-  private sincronizarFiltrosConOpciones(): void {
-    if (this.filtros.nivelUrgencia && !this.opciones.urgencias.includes(this.filtros.nivelUrgencia)) {
-      this.filtros.nivelUrgencia = '';
+  usarEjemplo(ejemplo: { etiqueta: string; consulta: string }): void {
+    this.consulta = ejemplo.consulta;
+    this.error = null;
+  }
+
+  limpiarTodo(): void {
+    this.consulta = '';
+    this.estadoVoz = null;
+    this.error = null;
+    this.reporte = null;
+    this.columnasConfigurables = [];
+    this.showExportMenu = false;
+    this.paginaActual = 1;
+  }
+
+  toggleColumna(key: string): void {
+    this.columnasConfigurables = this.columnasConfigurables.map((columna) =>
+      columna.key === key ? { ...columna, visible: !columna.visible } : columna
+    );
+  }
+
+  mostrarTodasLasColumnas(): void {
+    this.columnasConfigurables = this.columnasConfigurables.map((columna) => ({
+      ...columna,
+      visible: true,
+    }));
+  }
+
+  restablecerColumnas(): void {
+    this.mostrarTodasLasColumnas();
+  }
+
+  toggleEscucha(): void {
+    if (this.escuchando) {
+      this.detenerEscucha();
+      return;
     }
-    if (this.filtros.categoriaIncidente && !this.opciones.categorias_incidente.includes(this.filtros.categoriaIncidente)) {
-      this.filtros.categoriaIncidente = '';
+
+    const constructor = this.getSpeechRecognitionConstructor();
+    if (!constructor) {
+      this.estadoVoz = 'Tu navegador no soporta grabación por voz en esta pantalla. Puedes escribir la consulta manualmente.';
+      return;
     }
-    if (this.filtros.estadoSolicitud && !this.opciones.estados_solicitud.includes(this.filtros.estadoSolicitud)) {
-      this.filtros.estadoSolicitud = '';
+
+    this.error = null;
+    this.estadoVoz = 'Escuchando... vuelve a tocar el micrófono para detener y transcribir.';
+
+    const recognition = new constructor();
+    recognition.lang = 'es-ES';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      let texto = '';
+      for (let i = 0; i < event.results.length; i += 1) {
+        texto += `${event.results[i][0].transcript} `;
+      }
+      this.consulta = texto.trim();
+      this.cdr.markForCheck();
+    };
+
+    recognition.onerror = (event) => {
+      this.estadoVoz = event.error
+        ? `No pudimos transcribir el audio: ${event.error}.`
+        : 'No pudimos transcribir el audio.';
+      this.escuchando = false;
+      this.cdr.markForCheck();
+    };
+
+    recognition.onend = () => {
+      if (this.escuchando) {
+        this.estadoVoz = 'Grabación detenida. Ya puedes revisar la transcripción o generar el reporte.';
+      }
+      this.escuchando = false;
+      this.cdr.markForCheck();
+    };
+
+    this.recognition = recognition;
+    this.escuchando = true;
+    recognition.start();
+  }
+
+  detenerEscucha(): void {
+    if (this.recognition) {
+      this.recognition.stop();
     }
-    if (this.filtros.estadoAsignacion && !this.opciones.estados_asignacion.includes(this.filtros.estadoAsignacion)) {
-      this.filtros.estadoAsignacion = '';
+    this.escuchando = false;
+    this.estadoVoz = 'Grabación detenida. Revisa la transcripción antes de generar el reporte.';
+  }
+
+  toggleExportMenu(event: Event): void {
+    event.stopPropagation();
+    if (!this.reporte?.filas.length) {
+      return;
     }
-    if (this.filtros.estadoResultado && !this.opciones.estados_resultado.includes(this.filtros.estadoResultado)) {
-      this.filtros.estadoResultado = '';
-    }
+    this.showExportMenu = !this.showExportMenu;
   }
 
   exportarCsv(): void {
-    if (!this.respuesta?.reporte?.tabla?.length) {
+    if (!this.reporte?.filas.length) {
       return;
     }
+    const columnas = this.columnasVisibles;
+    const encabezados = columnas.map((columna) => columna.label);
+    let csv = `${encabezados.map((h) => `"${h}"`).join(',')}\n`;
 
-    const encabezados = ['Grupo', 'Total', 'Atendidas', 'Canceladas', 'Completadas', 'Tasa %'];
-    let csv = encabezados.map((h) => `"${h}"`).join(',') + '\n';
-
-    for (const item of this.respuesta.reporte.tabla) {
-      const fila = [
-        item.grupo,
-        item.total_solicitudes,
-        item.solicitudes_atendidas,
-        item.solicitudes_canceladas,
-        item.servicios_completados,
-        item.tasa_completacion,
-      ];
-      csv += fila.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',') + '\n';
+    for (const fila of this.reporte.filas) {
+      csv += `${columnas
+        .map((columna) => `"${this.formatearValor(fila[columna.key]).replace(/"/g, '""')}"`)
+        .join(',')}\n`;
     }
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `reporte-taller-${Date.now()}.csv`);
-    link.click();
-    URL.revokeObjectURL(link.href);
+    this.descargarArchivo(csv, 'text/csv;charset=utf-8;', `reporte-taller-${Date.now()}.csv`);
+    this.showExportMenu = false;
   }
 
   exportarHtml(): void {
-    if (!this.respuesta?.reporte?.tabla?.length) {
+    if (!this.reporte?.filas.length) {
       return;
     }
-
-    const rows = this.respuesta.reporte.tabla
+    const columnas = this.columnasVisibles;
+    const encabezados = columnas.map((columna) => `<th>${this.escapeHtml(columna.label)}</th>`).join('');
+    const filas = this.reporte.filas
       .map(
-        (item) => `
-          <tr>
-            <td>${this.escapeHtml(item.grupo)}</td>
-            <td>${item.total_solicitudes}</td>
-            <td>${item.solicitudes_atendidas}</td>
-            <td>${item.solicitudes_canceladas}</td>
-            <td>${item.servicios_completados}</td>
-            <td>${item.tasa_completacion}</td>
-          </tr>`
+        (fila) => `<tr>${columnas
+          .map((columna) => `<td>${this.escapeHtml(this.formatearValor(fila[columna.key]))}</td>`)
+          .join('')}</tr>`
       )
       .join('');
 
@@ -454,37 +597,119 @@ export class EstadisticasTallerComponent implements OnInit, OnDestroy {
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Reporte Taller</title>
+  <title>Reporte del Taller</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background: #f4f4f4; }
+    body { font-family: Arial, sans-serif; padding: 24px; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+    th { background: #eff6ff; }
   </style>
 </head>
 <body>
-  <h1>Reporte del Taller</h1>
-  <p>Generado: ${new Date().toLocaleString()}</p>
+  <h1>${this.escapeHtml(this.reporte.titulo)}</h1>
+  <p>${this.escapeHtml(this.reporte.descripcion || '')}</p>
+  <p><strong>Consulta:</strong> ${this.escapeHtml(this.reporte.consulta_original)}</p>
   <table>
-    <thead>
-      <tr>
-        <th>Grupo</th>
-        <th>Total</th>
-        <th>Atendidas</th>
-        <th>Canceladas</th>
-        <th>Completadas</th>
-        <th>Tasa %</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
+    <thead><tr>${encabezados}</tr></thead>
+    <tbody>${filas}</tbody>
   </table>
 </body>
 </html>`;
+    this.descargarArchivo(html, 'text/html;charset=utf-8;', `reporte-taller-${Date.now()}.html`);
+    this.showExportMenu = false;
+  }
 
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+  exportarPdf(): void {
+    if (!this.reporte?.filas.length) {
+      return;
+    }
+
+    const columnas = this.columnasVisibles;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const fecha = new Date().toLocaleString('es-BO');
+
+    doc.setFontSize(18);
+    doc.text(this.reporte.titulo || 'Reporte del Taller', 40, 40);
+    doc.setFontSize(10);
+    doc.text(`Consulta: ${this.reporte.consulta_original}`, 40, 58);
+    doc.text(`Generado: ${fecha}`, 40, 72);
+
+    (doc as any).autoTable({
+      startY: 90,
+      head: [columnas.map((columna) => columna.label)],
+      body: this.reporte.filas.map((fila) =>
+        columnas.map((columna) => this.formatearValor(fila[columna.key]))
+      ),
+      styles: {
+        fontSize: 8,
+        cellPadding: 6,
+        overflow: 'linebreak',
+      },
+      headStyles: {
+        fillColor: [37, 99, 235],
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252],
+      },
+      margin: { left: 30, right: 30 },
+    });
+
+    doc.save(`reporte-taller-${Date.now()}.pdf`);
+    this.showExportMenu = false;
+  }
+
+  paginaAnterior(): void {
+    if (this.paginaActual > 1) {
+      this.paginaActual -= 1;
+    }
+  }
+
+  paginaSiguiente(): void {
+    if (this.paginaActual < this.totalPaginas) {
+      this.paginaActual += 1;
+    }
+  }
+
+  formatearValor(valor: ReportCellValue | undefined): string {
+    if (valor === null || valor === undefined || valor === '') {
+      return '—';
+    }
+    if (typeof valor === 'boolean') {
+      return valor ? 'Sí' : 'No';
+    }
+    return String(valor);
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.showExportMenu = false;
+  }
+
+  ngOnDestroy(): void {
+    this.detenerEscucha();
+    this.recognition = null;
+  }
+
+  private getSpeechRecognitionConstructor(): SpeechRecognitionConstructor | null {
+    const browserWindow = window as unknown as {
+      SpeechRecognition?: SpeechRecognitionConstructor;
+      webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    };
+    return browserWindow.SpeechRecognition || browserWindow.webkitSpeechRecognition || null;
+  }
+
+  private formatearEtiquetaColumna(key: string): string {
+    return key
+      .split('_')
+      .map((fragmento) => fragmento.charAt(0).toUpperCase() + fragmento.slice(1))
+      .join(' ');
+  }
+
+  private descargarArchivo(contenido: string, tipo: string, nombre: string): void {
+    const blob = new Blob([contenido], { type: tipo });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `reporte-taller-${Date.now()}.html`);
+    link.setAttribute('download', nombre);
     link.click();
     URL.revokeObjectURL(link.href);
   }
@@ -496,60 +721,5 @@ export class EstadisticasTallerComponent implements OnInit, OnDestroy {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
-  }
-
-  setupReporteCharts(): void {
-    if (!this.respuesta?.reporte || this.respuesta.reporte.tabla.length === 0) {
-      this.reporteBarrasChart = { data: {}, options: {} };
-      this.reporteCompletacionChart = { data: {}, options: {} };
-      return;
-    }
-
-    const categorias = this.respuesta.reporte.graficos.categorias;
-
-    this.reporteBarrasChart = {
-      data: {
-        labels: categorias,
-        datasets: [
-          {
-            label: 'Total',
-            data: this.respuesta.reporte.graficos.serie_total_solicitudes,
-            backgroundColor: '#3b82f6',
-          },
-          {
-            label: 'Atendidas',
-            data: this.respuesta.reporte.graficos.serie_solicitudes_atendidas,
-            backgroundColor: '#10b981',
-          },
-          {
-            label: 'Canceladas',
-            data: this.respuesta.reporte.graficos.serie_solicitudes_canceladas,
-            backgroundColor: '#ef4444',
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } },
-      },
-    };
-
-    this.reporteCompletacionChart = {
-      data: {
-        labels: categorias,
-        datasets: [
-          {
-            data: this.respuesta.reporte.graficos.serie_servicios_completados,
-            backgroundColor: ['#8b5cf6', '#06b6d4', '#f59e0b', '#22c55e', '#ef4444', '#3b82f6'],
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } },
-      },
-    };
   }
 }

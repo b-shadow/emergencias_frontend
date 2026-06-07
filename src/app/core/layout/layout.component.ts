@@ -176,7 +176,7 @@ import { TrabajadoresService } from '@modules/assignment-attention/services/trab
                   </a>
                   <a routerLink="/estadisticas" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
                     <span class="text-lg">📈</span>
-                    <span>Estadísticas</span>
+                    <span>Reportes</span>
                   </a>
                 </div>
               </div>
@@ -255,7 +255,7 @@ import { TrabajadoresService } from '@modules/assignment-attention/services/trab
                   </a>
                   <a routerLink="/estadisticas-sistema" routerLinkActive="active" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition" (click)="closeSidebarOnMobile()">
                     <span class="text-lg">📊</span>
-                    <span>Estadísticas y Reportes</span>
+                    <span>Reportes del Sistema</span>
                   </a>
                 </div>
               </div>

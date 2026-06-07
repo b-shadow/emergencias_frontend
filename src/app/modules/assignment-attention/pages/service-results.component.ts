@@ -41,6 +41,7 @@ interface Asignacion {
   fecha_asignacion: string;
   fecha_inicio_atencion?: string | null;
   fecha_fin_atencion?: string | null;
+  fecha_llegada_auxilio?: string | null;
   motivo_cancelacion?: string | null;
   solicitud?: {
     id: number;
@@ -231,10 +232,10 @@ interface Asignacion {
                   <strong>Asignada:</strong> {{ asignacion.fecha_asignacion | date: 'dd/MM/yyyy HH:mm' }}
                 </span>
               </div>
-              <div *ngIf="asignacion.fecha_inicio_atencion" class="flex items-center gap-2">
+              <div *ngIf="asignacion.fecha_llegada_auxilio" class="flex items-center gap-2">
                 <span class="material-icons text-base text-yellow-500">schedule</span>
                 <span [ngClass]="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
-                  <strong>Inicio:</strong> {{ asignacion.fecha_inicio_atencion | date: 'dd/MM/yyyy HH:mm' }}
+                  <strong>Inicio:</strong> {{ asignacion.fecha_llegada_auxilio | date: 'dd/MM/yyyy HH:mm' }}
                 </span>
               </div>
               <div *ngIf="asignacion.fecha_fin_atencion" class="flex items-center gap-2">
@@ -360,7 +361,7 @@ export class ServiceResultsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = null;
 
-    this.asignacionesService.obtenerAsignacionesActivas().subscribe({
+    this.asignacionesService.obtenerAsignacionesConAtendidas().subscribe({
       next: (data: any) => {
         // Obtener todas las asignaciones
         const todas = Array.isArray(data) ? data : (data?.data || []);

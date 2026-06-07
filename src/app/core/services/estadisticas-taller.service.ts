@@ -126,6 +126,22 @@ export interface EstadisticasTallerResponse {
   mensaje_vacio?: string;
 }
 
+export interface ColumnaReporteTaller {
+  key: string;
+  label: string;
+}
+
+export interface ReporteConsultaTallerResponse {
+  consulta_original: string;
+  tipo_reporte: string;
+  titulo: string;
+  descripcion?: string | null;
+  columnas: ColumnaReporteTaller[];
+  filas: Record<string, string | number | boolean | null>[];
+  total_registros: number;
+  mensaje?: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -195,6 +211,13 @@ export class EstadisticasTallerService {
           }
         );
       }),
+    );
+  }
+
+  generarReporteConsulta(consulta: string): Observable<ReporteConsultaTallerResponse> {
+    return this.http.post<ReporteConsultaTallerResponse>(
+      `${this.apiUrl}/reportes-consulta`,
+      { consulta }
     );
   }
 }
