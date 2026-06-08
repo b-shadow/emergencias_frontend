@@ -12,19 +12,32 @@ import {
   TallerRegisterCheckoutRequest,
   TallerRegisterCheckoutValidationResponse,
 } from '@core/models/user.model';
-import { LocationPickerMapComponent, LocationSelection } from '@shared/components/location-picker-map.component';
+import {
+  LocationPickerMapComponent,
+  LocationSelection,
+} from '@shared/components/location-picker-map.component';
 import { NotificationComponent } from '@shared/components/notification.component';
 
 @Component({
   selector: 'app-register-taller-stripe-v2',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LocationPickerMapComponent, NotificationComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LocationPickerMapComponent,
+    NotificationComponent,
+  ],
   template: `
-    <div [class.dark]="isDarkMode" class="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-sky-50 to-cyan-50 text-slate-900 transition-colors duration-300 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:text-white">
+    <div
+      [class.dark]="isDarkMode"
+      class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_38%),linear-gradient(180deg,#f8fbff_0%,#eef5ff_55%,#f8fbff_100%)] text-slate-900 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.14),_transparent_30%),linear-gradient(180deg,#020617_0%,#0f172a_58%,#020617_100%)] dark:text-white"
+    >
       <button
         type="button"
         (click)="toggleTheme()"
-        class="fixed top-6 right-6 z-50 p-3 rounded-full bg-white dark:bg-slate-700 hover:shadow-lg transition-all hover:scale-110 text-lg"
+        class="fixed right-5 top-5 z-50 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 text-xl shadow-lg shadow-slate-200/40 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-xl dark:border-slate-700 dark:bg-slate-800/90 dark:shadow-black/20"
+        [attr.aria-label]="isDarkMode ? 'Activar modo claro' : 'Activar modo oscuro'"
       >
         {{ isDarkMode ? '☀️' : '🌙' }}
       </button>
@@ -34,60 +47,307 @@ import { NotificationComponent } from '@shared/components/notification.component
         [title]="notificationTitle"
         [message]="notificationMessage"
         [isVisible]="showNotification"
-        (close)="showNotification = false">
-      </app-notification>
+        (close)="showNotification = false"
+      />
 
-      <div class="relative z-10 max-w-4xl mx-auto px-4 py-12">
-        <div class="rounded-xl shadow-lg p-8 mb-8 border" [class]="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'">
-          <div class="text-center pb-8 border-b" [class]="isDarkMode ? 'border-slate-700' : 'border-gray-200'">
-            <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-500 bg-clip-text text-transparent">
-              Registrar Taller + Suscripción
-            </h1>
-            <p class="text-sm" [class]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-              Completa datos, selecciona plan y paga con Stripe.
-            </p>
+      <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <div class="mb-6 flex flex-col gap-5 rounded-[30px] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(59,130,246,0.10)] backdrop-blur xl:flex-row xl:items-start xl:justify-between dark:border-slate-700 dark:bg-slate-900/95 dark:shadow-[0_24px_80px_rgba(2,6,23,0.55)]">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 text-white shadow-lg shadow-sky-500/30"
+            >
+              <svg viewBox="0 0 24 24" class="h-8 w-8 fill-none stroke-current" stroke-width="1.9">
+                <path d="M14.7 6.3a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4l-2 2-3-3 2-2Z" />
+                <path d="m11.7 9.3-7.4 7.4-.8 3.1 3.1-.8 7.4-7.4" />
+                <path d="M8 5H6a2 2 0 0 0-2 2v2" />
+                <path d="M19 9v8a2 2 0 0 1-2 2H9" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-4xl">
+                Registrar Taller + Suscripción
+              </h1>
+              <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                Completa los datos, selecciona un plan y continúa con el pago seguro en Stripe.
+              </p>
+            </div>
           </div>
 
-          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="mt-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" formControlName="nombre_taller" placeholder="Nombre del Taller *" [class]="fieldClass()" />
-              <input type="text" formControlName="razon_social" placeholder="Razón Social" [class]="fieldClass()" />
-              <input type="text" formControlName="nit" placeholder="NIT" [class]="fieldClass()" />
-              <input type="email" formControlName="correo" placeholder="Correo *" [class]="fieldClass()" />
-              <input type="text" formControlName="telefono" placeholder="Teléfono *" [class]="fieldClass()" />
-              <input type="text" formControlName="direccion" placeholder="Dirección *" [class]="fieldClass()" />
-              <input type="password" formControlName="contrasena" placeholder="Contraseña *" [class]="fieldClass()" />
-              <input type="password" formControlName="confirmar_contrasena" placeholder="Confirmar Contraseña *" [class]="fieldClass()" />
+          <div class="flex flex-wrap items-center gap-3">
+            <div
+              class="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200"
+            >
+              <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+              Registro guiado
             </div>
+            <a
+              routerLink="/auth/login"
+              class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-sky-500/40 dark:hover:text-sky-300"
+            >
+              Ya tengo cuenta
+            </a>
+          </div>
+        </div>
 
-            <textarea formControlName="descripcion" rows="3" placeholder="Descripción" [class]="textareaClass()"></textarea>
+        <div class="rounded-[30px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_70px_rgba(59,130,246,0.08)] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 dark:shadow-[0_24px_80px_rgba(2,6,23,0.55)] sm:p-7">
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <section class="rounded-[26px] border border-slate-200/90 bg-white/90 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800/90">
+              <div class="mb-5 flex items-start gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
+                  <svg viewBox="0 0 24 24" class="h-6 w-6 fill-none stroke-current" stroke-width="1.8">
+                    <path d="M4 20h16" />
+                    <path d="M5 20V8l7-4 7 4v12" />
+                    <path d="M9 20v-5h6v5" />
+                    <path d="M9 10h.01M15 10h.01" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-xl font-black text-slate-950 dark:text-white">Datos del taller</h2>
+                  <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    Completa la información principal y de contacto para crear tu cuenta.
+                  </p>
+                </div>
+              </div>
 
-            <div class="mt-6">
-              <h2 class="text-lg font-semibold mb-2" [class]="isDarkMode ? 'text-white' : 'text-gray-900'">Ubicación del Taller</h2>
+              <div class="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Nombre del taller *</label>
+                  <input type="text" formControlName="nombre_taller" placeholder="Ej. Taller Auto Madrid" [class]="fieldClass()" />
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Razón social</label>
+                  <input type="text" formControlName="razon_social" placeholder="Ej. Auto Madrid S.R.L." [class]="fieldClass()" />
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">NIT</label>
+                  <input type="text" formControlName="nit" placeholder="Ej. 123456789" [class]="fieldClass()" />
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Correo *</label>
+                  <input type="email" formControlName="correo" placeholder="Ej. contacto@tallermadrid.com" [class]="fieldClass()" />
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Teléfono *</label>
+                  <input type="text" formControlName="telefono" placeholder="Ej. +591 70000000" [class]="fieldClass()" />
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Dirección *</label>
+                  <input type="text" formControlName="direccion" placeholder="Ej. Av. América #1234" [class]="fieldClass()" />
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Contraseña *</label>
+                  <div class="relative">
+                    <input
+                      [type]="showPassword ? 'text' : 'password'"
+                      formControlName="contrasena"
+                      placeholder="Mínimo 8 caracteres"
+                      [class]="fieldClass()"
+                    />
+                    <button
+                      type="button"
+                      (click)="showPassword = !showPassword"
+                      class="absolute inset-y-0 right-3 inline-flex items-center text-slate-400 transition hover:text-sky-600 dark:hover:text-sky-300"
+                    >
+                      {{ showPassword ? 'Ocultar' : 'Ver' }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">Confirmar contraseña *</label>
+                  <div class="relative">
+                    <input
+                      [type]="showConfirmPassword ? 'text' : 'password'"
+                      formControlName="confirmar_contrasena"
+                      placeholder="Repite tu contraseña"
+                      [class]="fieldClass()"
+                    />
+                    <button
+                      type="button"
+                      (click)="showConfirmPassword = !showConfirmPassword"
+                      class="absolute inset-y-0 right-3 inline-flex items-center text-slate-400 transition hover:text-sky-600 dark:hover:text-sky-300"
+                    >
+                      {{ showConfirmPassword ? 'Ocultar' : 'Ver' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="registerForm.hasError('passwordMismatch')" class="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
+                Las contraseñas no coinciden.
+              </div>
+
+              <div class="mt-5">
+                <div class="mb-2 flex items-center justify-between">
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Descripción</label>
+                  <span class="text-xs font-medium text-slate-400 dark:text-slate-500">{{ descripcionLength }}/300</span>
+                </div>
+                <textarea
+                  formControlName="descripcion"
+                  rows="4"
+                  maxlength="300"
+                  placeholder="Cuéntanos sobre tu taller, servicios principales, experiencia, etc."
+                  [class]="textareaClass()"
+                ></textarea>
+              </div>
+            </section>
+
+            <section class="rounded-[26px] border border-slate-200/90 bg-white/90 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800/90">
+              <div class="mb-4 flex items-start gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
+                  <svg viewBox="0 0 24 24" class="h-6 w-6 fill-none stroke-current" stroke-width="1.8">
+                    <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" />
+                    <circle cx="12" cy="10" r="2.5" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-xl font-black text-slate-950 dark:text-white">Ubicación del taller</h2>
+                  <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    Selecciona el punto exacto en el mapa para que tus clientes te encuentren mejor.
+                  </p>
+                </div>
+              </div>
+
               <app-location-picker-map (locationSelected)="onLocationSelected($event)"></app-location-picker-map>
-            </div>
+            </section>
 
-            <div class="mt-6">
-              <h2 class="text-lg font-semibold mb-2" [class]="isDarkMode ? 'text-white' : 'text-gray-900'">Plan de Suscripción *</h2>
-              <select formControlName="id_plan" [class]="fieldClass()">
-                <option value="">Selecciona un plan</option>
-                <option *ngFor="let p of subscriptionPlans" [value]="p.id_plan">
-                  {{ p.nombre_plan }} - {{ p.precio_bs | number:'1.2-2' }} Bs / {{ p.duracion_dias }} días
-                </option>
-              </select>
-            </div>
+            <section class="rounded-[26px] border border-slate-200/90 bg-white/90 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800/90">
+              <div class="mb-5 flex items-start gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
+                  <svg viewBox="0 0 24 24" class="h-6 w-6 fill-none stroke-current" stroke-width="1.8">
+                    <path d="M6 8h12" />
+                    <path d="M6 12h12" />
+                    <path d="M6 16h12" />
+                    <path d="M4 6h16v12H4z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-xl font-black text-slate-950 dark:text-white">Plan de suscripción *</h2>
+                  <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    Elige el plan que mejor se adapte a la operación de tu taller.
+                  </p>
+                </div>
+              </div>
 
-            <button type="submit" [disabled]="isLoading || validatingStripe"
-                    class="w-full mt-6 px-4 py-3 bg-gradient-to-r from-sky-600 via-cyan-600 to-blue-600 disabled:opacity-60 text-white font-bold rounded-lg">
-              <span *ngIf="!isLoading && !validatingStripe">Continuar a Stripe</span>
-              <span *ngIf="isLoading">Preparando pago...</span>
-              <span *ngIf="validatingStripe">Validando pago...</span>
-            </button>
+              <div class="grid gap-5 lg:grid-cols-3">
+                <button
+                  *ngFor="let plan of subscriptionPlans"
+                  type="button"
+                  (click)="selectPlan(plan.id_plan)"
+                  class="group relative overflow-hidden rounded-[24px] border p-5 text-left transition duration-200"
+                  [ngClass]="
+                    isPlanSelected(plan.id_plan)
+                      ? 'border-emerald-300 bg-emerald-50/80 shadow-lg shadow-emerald-500/10 dark:border-emerald-400/40 dark:bg-emerald-500/10'
+                      : 'border-slate-200 bg-white hover:-translate-y-1 hover:border-sky-200 hover:shadow-lg hover:shadow-sky-100/80 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-sky-500/30 dark:hover:shadow-black/20'
+                  "
+                >
+                  <div
+                    *ngIf="isPopularPlan(plan)"
+                    class="absolute right-4 top-4 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"
+                  >
+                    Más popular
+                  </div>
+
+                  <div class="mb-4 flex items-center justify-between">
+                    <div
+                      class="flex h-12 w-12 items-center justify-center rounded-2xl"
+                      [ngClass]="
+                        isPlanSelected(plan.id_plan)
+                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-200'
+                          : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300'
+                      "
+                    >
+                      <svg viewBox="0 0 24 24" class="h-6 w-6 fill-none stroke-current" stroke-width="1.8">
+                        <path d="M5 12 3 7l6 2 3-5 3 5 6-2-2 5 3 5-6-.5L12 21l-3.5-4.5L2 17l3-5Z" />
+                      </svg>
+                    </div>
+                    <span
+                      class="inline-flex h-6 w-6 items-center justify-center rounded-full border text-xs font-black"
+                      [ngClass]="
+                        isPlanSelected(plan.id_plan)
+                          ? 'border-emerald-400 bg-emerald-500 text-white'
+                          : 'border-slate-300 bg-white text-transparent dark:border-slate-600 dark:bg-slate-800'
+                      "
+                    >
+                      •
+                    </span>
+                  </div>
+
+                  <h3 class="text-xl font-black text-slate-950 dark:text-white">
+                    {{ plan.nombre_plan }}
+                  </h3>
+                  <p class="mt-1 min-h-[40px] text-sm text-slate-600 dark:text-slate-300">
+                    {{ plan.descripcion || defaultPlanDescription(plan) }}
+                  </p>
+
+                  <div class="mt-5 flex items-end gap-2">
+                    <span class="text-4xl font-black text-slate-950 dark:text-white">
+                      Bs {{ plan.precio_bs | number: '1.0-0' }}
+                    </span>
+                    <span class="pb-1 text-sm text-slate-500 dark:text-slate-400">/ {{ plan.duracion_dias }} días</span>
+                  </div>
+
+                  <ul class="mt-5 space-y-2">
+                    <li *ngFor="let feature of planFeatures(plan)" class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                      <span class="mt-1 h-2 w-2 rounded-full bg-sky-500"></span>
+                      <span>{{ feature }}</span>
+                    </li>
+                  </ul>
+                </button>
+              </div>
+
+              <input type="hidden" formControlName="id_plan" />
+              <div *ngIf="registerForm.get('id_plan')?.invalid && registerForm.touched" class="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+                Selecciona un plan antes de continuar.
+              </div>
+            </section>
+
+            <section class="rounded-[26px] border border-slate-200/90 bg-white/90 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800/90">
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex items-start gap-4">
+                  <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
+                    <svg viewBox="0 0 24 24" class="h-6 w-6 fill-none stroke-current" stroke-width="1.8">
+                      <path d="M12 3 4 7v5c0 5 3.4 8.7 8 9 4.6-.3 8-4 8-9V7l-8-4Z" />
+                      <path d="m9.5 12 1.7 1.7L15 9.8" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-black text-slate-950 dark:text-white">Todo listo para comenzar</h2>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                      Al continuar, podrás revisar tu información y proceder al pago seguro con Stripe.
+                    </p>
+                    <div
+                      *ngIf="selectedPlan"
+                      class="mt-3 inline-flex flex-wrap items-center gap-2 rounded-2xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    >
+                      <span>Plan elegido:</span>
+                      <span class="rounded-full bg-white px-3 py-1 text-sky-700 shadow-sm dark:bg-slate-700 dark:text-sky-300">
+                        {{ selectedPlan.nombre_plan }} · Bs {{ selectedPlan.precio_bs | number: '1.0-0' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  [disabled]="isLoading || validatingStripe"
+                  class="inline-flex min-w-[280px] items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 px-6 py-4 text-base font-black text-white shadow-xl shadow-sky-500/25 transition hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span *ngIf="!isLoading && !validatingStripe">Continuar con Stripe</span>
+                  <span *ngIf="isLoading">Preparando pago...</span>
+                  <span *ngIf="validatingStripe">Validando pago...</span>
+                  <svg *ngIf="!isLoading && !validatingStripe" viewBox="0 0 24 24" class="h-5 w-5 fill-none stroke-current" stroke-width="2">
+                    <path d="M5 12h14" />
+                    <path d="m13 5 7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </section>
           </form>
 
-          <div class="mt-8 text-center text-sm" [class]="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-            ¿Ya tienes cuenta?
-            <a routerLink="/auth/login" class="font-semibold text-cyan-600 hover:text-cyan-700">Inicia sesión</a>
+          <div class="mt-8 flex flex-col items-center justify-center gap-2 text-center text-sm text-slate-500 dark:text-slate-400 sm:flex-row">
+            <span>Pago 100% seguro con Stripe</span>
+            <span class="hidden sm:inline">•</span>
+            <span>Tus datos están protegidos</span>
           </div>
         </div>
       </div>
@@ -100,6 +360,8 @@ export class RegisterTallerStripeV2Component implements OnInit, OnDestroy {
   validatingStripe = false;
   isDarkMode = false;
   subscriptionPlans: SubscriptionPlan[] = [];
+  showPassword = false;
+  showConfirmPassword = false;
 
   showNotification = false;
   notificationType: 'success' | 'error' | 'info' | 'warning' = 'info';
@@ -141,13 +403,14 @@ export class RegisterTallerStripeV2Component implements OnInit, OnDestroy {
       },
     );
 
-    this.themeService.darkMode$.pipe(takeUntil(this.destroy$)).subscribe((isDark) => {
-      this.isDarkMode = isDark;
-    });
+    this.themeService.darkMode$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((isDark) => (this.isDarkMode = isDark));
 
     this.authService.obtenerPlanesSuscripcion().subscribe({
       next: (plans) => (this.subscriptionPlans = plans || []),
-      error: () => this.notify('error', 'Error', 'No se pudieron cargar los planes de suscripción.'),
+      error: () =>
+        this.notify('error', 'Error', 'No se pudieron cargar los planes de suscripción.'),
     });
 
     this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
@@ -155,7 +418,11 @@ export class RegisterTallerStripeV2Component implements OnInit, OnDestroy {
       const sessionId = params.get('session_id');
       const token = params.get('token');
       if (payment === 'cancelled') {
-        this.notify('warning', 'Pago cancelado', 'El pago fue cancelado. Puedes intentar nuevamente.');
+        this.notify(
+          'warning',
+          'Pago cancelado',
+          'El pago fue cancelado. Puedes intentarlo nuevamente.',
+        );
         return;
       }
       if (sessionId && token) {
@@ -175,7 +442,11 @@ export class RegisterTallerStripeV2Component implements OnInit, OnDestroy {
           },
           error: (err) => {
             this.validatingStripe = false;
-            this.notify('error', 'Validación fallida', err?.error?.detail || 'No se pudo validar pago Stripe.');
+            this.notify(
+              'error',
+              'Validación fallida',
+              err?.error?.detail || 'No se pudo validar el pago con Stripe.',
+            );
           },
         });
       }
@@ -187,13 +458,31 @@ export class RegisterTallerStripeV2Component implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  get descripcionLength(): number {
+    return (this.registerForm?.get('descripcion')?.value || '').length;
+  }
+
+  get selectedPlan(): SubscriptionPlan | undefined {
+    return this.subscriptionPlans.find(
+      (plan) => plan.id_plan === this.registerForm?.get('id_plan')?.value,
+    );
+  }
+
   onLocationSelected(location: LocationSelection): void {
-    this.registerForm.patchValue({ latitud: location.latitud, longitud: location.longitud });
+    this.registerForm.patchValue({
+      latitud: location.latitud,
+      longitud: location.longitud,
+    });
   }
 
   onSubmit(): void {
+    this.registerForm.markAllAsTouched();
     if (this.registerForm.invalid) {
-      this.notify('warning', 'Campos incompletos', 'Completa todos los campos requeridos.');
+      this.notify(
+        'warning',
+        'Campos incompletos',
+        'Completa todos los campos requeridos antes de continuar.',
+      );
       return;
     }
     this.isLoading = true;
@@ -218,26 +507,84 @@ export class RegisterTallerStripeV2Component implements OnInit, OnDestroy {
       next: (response) => {
         this.isLoading = false;
         if (!response.checkout_url) {
-          this.notify('error', 'Checkout no disponible', 'No se pudo iniciar pago con Stripe.');
+          this.notify(
+            'error',
+            'Checkout no disponible',
+            'No se pudo iniciar el pago con Stripe.',
+          );
           return;
         }
         try {
           const checkoutUrl = new URL(response.checkout_url);
           if (checkoutUrl.hostname !== 'checkout.stripe.com') {
-            this.notify('error', 'Checkout inválido', 'La URL de pago no corresponde a Stripe real.');
+            this.notify(
+              'error',
+              'Checkout inválido',
+              'La URL de pago no corresponde a Stripe real.',
+            );
             return;
           }
         } catch {
-          this.notify('error', 'Checkout inválido', 'La URL de pago recibida no es válida.');
+          this.notify(
+            'error',
+            'Checkout inválido',
+            'La URL de pago recibida no es válida.',
+          );
           return;
         }
         window.location.href = response.checkout_url;
       },
       error: (err) => {
         this.isLoading = false;
-        this.notify('error', 'Error en registro', err?.error?.detail || 'No se pudo iniciar el checkout.');
+        this.notify(
+          'error',
+          'Error en el registro',
+          err?.error?.detail || 'No se pudo iniciar el checkout.',
+        );
       },
     });
+  }
+
+  selectPlan(idPlan: string): void {
+    this.registerForm.patchValue({ id_plan: idPlan });
+    this.registerForm.get('id_plan')?.markAsTouched();
+  }
+
+  isPlanSelected(idPlan: string): boolean {
+    return this.registerForm.get('id_plan')?.value === idPlan;
+  }
+
+  isPopularPlan(plan: SubscriptionPlan): boolean {
+    const code = (plan.codigo_plan || plan.nombre_plan || '').toLowerCase();
+    return code.includes('stand') || code.includes('estandar') || code.includes('estándar');
+  }
+
+  defaultPlanDescription(plan: SubscriptionPlan): string {
+    const name = (plan.codigo_plan || plan.nombre_plan || '').toLowerCase();
+    if (name.includes('basic') || name.includes('basico') || name.includes('básico')) {
+      return 'Ideal para talleres pequeños que están comenzando.';
+    }
+    if (name.includes('stand') || name.includes('estandar') || name.includes('estándar')) {
+      return 'Para talleres en crecimiento que necesitan más control.';
+    }
+    if (name.includes('premium')) {
+      return 'Para talleres que buscan una operación más completa.';
+    }
+    return 'Un plan diseñado para profesionalizar la gestión de tu taller.';
+  }
+
+  planFeatures(plan: SubscriptionPlan): string[] {
+    const name = (plan.codigo_plan || plan.nombre_plan || '').toLowerCase();
+    if (name.includes('basic') || name.includes('basico') || name.includes('básico')) {
+      return ['Gestión de clientes', 'Órdenes de trabajo', 'Reportes básicos', 'Soporte por email'];
+    }
+    if (name.includes('stand') || name.includes('estandar') || name.includes('estándar')) {
+      return ['Todo lo del plan Básico', 'Inventario y repuestos', 'Reportes avanzados', 'Soporte prioritario'];
+    }
+    if (name.includes('premium')) {
+      return ['Todo lo del plan Estándar', 'Multi-sucursal', 'Integraciones API', 'Soporte 24/7'];
+    }
+    return ['Operación centralizada', 'Gestión comercial', 'Panel de indicadores', 'Soporte incluido'];
   }
 
   toggleTheme(): void {
@@ -247,17 +594,21 @@ export class RegisterTallerStripeV2Component implements OnInit, OnDestroy {
 
   fieldClass(): string {
     return this.isDarkMode
-      ? 'w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent'
-      : 'w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent';
+      ? 'w-full rounded-2xl border border-slate-600 bg-slate-700 px-4 py-3 text-white placeholder-slate-400 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-500/15'
+      : 'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-500/15';
   }
 
   textareaClass(): string {
     return this.isDarkMode
-      ? 'mt-4 w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent'
-      : 'mt-4 w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent';
+      ? 'w-full rounded-2xl border border-slate-600 bg-slate-700 px-4 py-3 text-white placeholder-slate-400 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-500/15'
+      : 'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-500/15';
   }
 
-  private notify(type: 'success' | 'error' | 'info' | 'warning', title: string, message: string): void {
+  private notify(
+    type: 'success' | 'error' | 'info' | 'warning',
+    title: string,
+    message: string,
+  ): void {
     this.showNotification = true;
     this.notificationType = type;
     this.notificationTitle = title;
